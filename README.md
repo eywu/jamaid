@@ -2,7 +2,7 @@
 
 Convert FigJam flow diagrams into Mermaid flowchart markdown.
 
-> ⚠️ **Alpha:** `v0.1.0` is an early alpha release. CLI options and output behavior may change in future versions.
+> ⚠️ **Alpha:** `v0.2.0` is an early alpha release. CLI options and output behavior may change in future versions.
 
 ## Requirements
 
