@@ -1,6 +1,6 @@
 # jamaid
 
-Convert FigJam flow diagrams into Mermaid flowchart markdown.
+Convert FigJam flow diagrams into Mermaid 🧜‍♀️ flowchart markdown.
 
 ## Requirements
 
