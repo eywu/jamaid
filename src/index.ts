@@ -20,10 +20,28 @@ type CliOptions = {
   direction?: MermaidDirection;
   markdown?: boolean;
   png?: boolean;
+  svg?: boolean;
+  html?: boolean;
 };
 
 function sanitizeFilename(name: string): string {
   return name.replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").toLowerCase() || "output";
+}
+
+async function renderWithMmdc(mermaid: string, outPath: string, format: "png" | "svg" | "html") {
+  const tmpMmd = join((await import("node:os")).tmpdir(), `jamaid-${Date.now()}.mmd`);
+  await writeFile(tmpMmd, `${mermaid}\n`, "utf8");
+  try {
+    await execFileAsync("mmdc", ["-i", tmpMmd, "-o", outPath, "-e", format, "-b", "transparent"]);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("ENOENT")) {
+      throw new Error("mmdc (mermaid-cli) not found. Install it with: npm i -g @mermaid-js/mermaid-cli");
+    }
+    throw new Error(`${format.toUpperCase()} rendering failed: ${msg}`);
+  } finally {
+    await import("node:fs/promises").then((fs) => fs.unlink(tmpMmd).catch(() => {}));
+  }
 }
 
 const VALID_DIRECTIONS = new Set<MermaidDirection>(["TD", "LR", "TB", "BT", "RL"]);
@@ -83,6 +101,8 @@ program
   )
   .option("--markdown", "Output as Markdown with fenced mermaid code block (<filename>.md)")
   .option("--png", "Output as PNG image (<filename>.png, requires mmdc/mermaid-cli)")
+  .option("--svg", "Output as SVG image (<filename>.svg, requires mmdc/mermaid-cli)")
+  .option("--html", "Output as HTML with embedded interactive SVG (<filename>.html, requires mmdc/mermaid-cli)")
   .action(async (input: string, options: CliOptions) => {
     const fileKey = extractFileKey(input);
     const token = await resolveToken(options.token);
@@ -91,6 +111,11 @@ program
     const mermaid = toMermaid(diagram, { direction: options.direction });
 
     const baseName = sanitizeFilename(figmaFile.name ?? fileKey);
+
+    const formatFlags = [options.markdown, options.png, options.svg, options.html].filter(Boolean).length;
+    if (formatFlags > 1) {
+      throw new Error("Use only one output format flag at a time: --markdown, --png, --svg, or --html.");
+    }
 
     if (options.markdown) {
       const mdContent = `\`\`\`mermaid\n${mermaid}\n\`\`\`\n`;
@@ -101,26 +126,23 @@ program
     }
 
     if (options.png) {
-      const pngPath = options.output ?? `${baseName}.png`;
-      const tmpMmd = join(
-        (await import("node:os")).tmpdir(),
-        `jamaid-${Date.now()}.mmd`,
-      );
-      await writeFile(tmpMmd, `${mermaid}\n`, "utf8");
-      try {
-        await execFileAsync("mmdc", ["-i", tmpMmd, "-o", pngPath, "-b", "transparent"]);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("ENOENT")) {
-          throw new Error(
-            "mmdc (mermaid-cli) not found. Install it with: npm i -g @mermaid-js/mermaid-cli",
-          );
-        }
-        throw new Error(`PNG rendering failed: ${msg}`);
-      } finally {
-        await import("node:fs/promises").then((fs) => fs.unlink(tmpMmd).catch(() => {}));
-      }
-      process.stderr.write(`Written to ${pngPath}\n`);
+      const outPath = options.output ?? `${baseName}.png`;
+      await renderWithMmdc(mermaid, outPath, "png");
+      process.stderr.write(`Written to ${outPath}\n`);
+      return;
+    }
+
+    if (options.svg) {
+      const outPath = options.output ?? `${baseName}.svg`;
+      await renderWithMmdc(mermaid, outPath, "svg");
+      process.stderr.write(`Written to ${outPath}\n`);
+      return;
+    }
+
+    if (options.html) {
+      const outPath = options.output ?? `${baseName}.html`;
+      await renderWithMmdc(mermaid, outPath, "html");
+      process.stderr.write(`Written to ${outPath}\n`);
       return;
     }
 

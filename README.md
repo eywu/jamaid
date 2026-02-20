@@ -27,6 +27,12 @@ npx tsx src/index.ts ABC123 --markdown
 
 # Render as PNG image (requires mermaid-cli)
 npx tsx src/index.ts ABC123 --png
+
+# Render as SVG image (requires mermaid-cli)
+npx tsx src/index.ts ABC123 --svg
+
+# Render as interactive HTML (embedded SVG, requires mermaid-cli)
+npx tsx src/index.ts ABC123 --html
 ```
 
 ## CLI
@@ -43,6 +49,8 @@ Options:
   -d, --direction <dir>    Override direction: TD, LR, TB, BT, RL
   --markdown               Output as Markdown (.md) with fenced mermaid code block
   --png                    Output as PNG image (.png, requires mmdc)
+  --svg                    Output as SVG image (.svg, requires mmdc)
+  --html                   Output as HTML with embedded interactive SVG (.html, requires mmdc)
   -h, --help               Display help
 ```
 
@@ -53,11 +61,13 @@ Options:
 | _(none)_     | Raw mermaid to stdout | —                  |
 | `-o <path>`  | Raw mermaid to file   | As specified       |
 | `--markdown` | Fenced mermaid in Markdown | `<figjam-name>.md` |
-| `--png`      | PNG image       | `<figjam-name>.png`      |
+| `--png`      | PNG image                  | `<figjam-name>.png` |
+| `--svg`      | SVG image                  | `<figjam-name>.svg` |
+| `--html`     | Interactive HTML (embedded SVG) | `<figjam-name>.html` |
 
-For `--markdown` and `--png`, the filename is derived from the FigJam file name. Override with `-o custom.md` or `-o custom.png`.
+For `--markdown`, `--png`, `--svg`, and `--html`, the filename is derived from the FigJam file name. Override with `-o custom.ext`.
 
-**PNG rendering** requires [mermaid-cli](https://github.com/mermaid-js/mermaid-cli):
+**PNG/SVG/HTML rendering** requires [mermaid-cli](https://github.com/mermaid-js/mermaid-cli):
 
 ```bash
 npm i -g @mermaid-js/mermaid-cli
