@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 - 2026-02-20
+
+### Added
+- Page-aware export for multi-page FigJam files (CANVAS-level parsing).
+- New `--page <name-or-index>` option to export a single page by exact name or 1-based index.
+- Parser support for page-scoped diagrams via `parseFigmaPages`.
+- Test coverage for multi-page splitting behavior.
+
+### Changed
+- Multi-page files now export one output per page by default, using `<figjam-name>-<page-name>.<ext>`.
+- `-o/--output` is now single-page only (use `--page` when specifying custom output path).
+- Updated README usage and CLI docs for page-selection and multi-file export behavior.
+
 ## 0.2.0 - 2026-02-19
 
 ### Changed
