@@ -1,0 +1,137 @@
+{
+  "name": "Example Flow",
+  "document": {
+    "id": "0:0",
+    "type": "DOCUMENT",
+    "name": "Document",
+    "children": [
+      {
+        "id": "1:1",
+        "type": "CANVAS",
+        "name": "Page 1",
+        "children": [
+          {
+            "id": "2:1",
+            "type": "SECTION",
+            "name": "Core Flow",
+            "children": [
+              {
+                "id": "3:1",
+                "type": "SHAPE_WITH_TEXT",
+                "shapeType": "ROUNDED_RECTANGLE",
+                "absoluteBoundingBox": { "x": 100, "y": 100, "width": 160, "height": 80 },
+                "children": [
+                  {
+                    "id": "3:1:1",
+                    "type": "TEXT",
+                    "characters": "Start"
+                  }
+                ]
+              },
+              {
+                "id": "3:2",
+                "type": "SHAPE_WITH_TEXT",
+                "shapeType": "DIAMOND",
+                "absoluteBoundingBox": { "x": 420, "y": 110, "width": 180, "height": 120 },
+                "children": [
+                  {
+                    "id": "3:2:1",
+                    "type": "TEXT",
+                    "characters": "Approved?"
+                  }
+                ]
+              },
+              {
+                "id": "3:3",
+                "type": "SHAPE_WITH_TEXT",
+                "shapeType": "ELLIPSE",
+                "absoluteBoundingBox": { "x": 740, "y": 130, "width": 120, "height": 120 },
+                "children": [
+                  {
+                    "id": "3:3:1",
+                    "type": "TEXT",
+                    "characters": "Done"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "4:1",
+            "type": "SHAPE_WITH_TEXT",
+            "shapeType": "ENG_DATABASE",
+            "absoluteBoundingBox": { "x": 1060, "y": 150, "width": 120, "height": 90 },
+            "children": [
+              {
+                "id": "4:1:1",
+                "type": "TEXT",
+                "characters": "Archive"
+              }
+            ]
+          },
+          {
+            "id": "5:1",
+            "type": "CONNECTOR",
+            "connectorStart": { "endpointNodeId": "3:1" },
+            "connectorEnd": { "endpointNodeId": "3:2" },
+            "connectorEndStrokeCap": "ARROW_LINES",
+            "children": [
+              {
+                "id": "5:1:1",
+                "type": "TEXT",
+                "characters": "submit"
+              }
+            ]
+          },
+          {
+            "id": "5:2",
+            "type": "CONNECTOR",
+            "connectorStart": { "endpointNodeId": "3:2" },
+            "connectorEnd": { "endpointNodeId": "3:3" },
+            "connectorEndStrokeCap": "ARROW_EQUILATERAL",
+            "children": [
+              {
+                "id": "5:2:1",
+                "type": "TEXT",
+                "characters": "yes"
+              }
+            ]
+          },
+          {
+            "id": "5:3",
+            "type": "CONNECTOR",
+            "connectorStart": { "endpointNodeId": "3:3" },
+            "connectorEnd": { "endpointNodeId": "4:1" },
+            "connectorEndStrokeCap": "NONE"
+          },
+          {
+            "id": "5:4",
+            "type": "CONNECTOR",
+            "connectorStart": { "endpointNodeId": "4:1" },
+            "connectorEnd": { "endpointNodeId": "3:1" },
+            "connectorStartStrokeCap": "ARROW_LINES",
+            "connectorEndStrokeCap": "ARROW_EQUILATERAL",
+            "children": [
+              {
+                "id": "5:4:1",
+                "type": "TEXT",
+                "characters": "sync"
+              }
+            ]
+          },
+          {
+            "id": "6:1",
+            "type": "STICKY",
+            "children": [
+              {
+                "id": "6:1:1",
+                "type": "TEXT",
+                "characters": "Manual verification"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
