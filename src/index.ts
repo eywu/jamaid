@@ -7,16 +7,15 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { extractFileKey, fetchFigmaFile } from "./figma.js";
-import { toMermaid } from "./mermaid.js";
-import { parseFigmaPages } from "./parser.js";
-import type { MermaidDirection, ParsedPageDiagram } from "./types.js";
+import { runDiagramPipeline, type RenderedPageDiagram } from "./pipeline.js";
+import type { DiagramSourceMode, MermaidDirection } from "./types.js";
 
 const execFileAsync = promisify(execFile);
 
 type CliOptions = {
   output?: string;
   token?: string;
+  source?: DiagramSourceMode;
   direction?: MermaidDirection;
   markdown?: boolean;
   png?: boolean;
@@ -45,11 +44,20 @@ async function renderWithMmdc(mermaid: string, outPath: string, format: "png" | 
 }
 
 const VALID_DIRECTIONS = new Set<MermaidDirection>(["TD", "LR", "TB", "BT", "RL"]);
+const VALID_SOURCES = new Set<DiagramSourceMode>(["rest", "mcp", "auto"]);
 
 function parseDirection(value: string): MermaidDirection {
   const normalized = value.trim().toUpperCase() as MermaidDirection;
   if (!VALID_DIRECTIONS.has(normalized)) {
     throw new InvalidArgumentError("Direction must be one of: TD, LR, TB, BT, RL.");
+  }
+  return normalized;
+}
+
+function parseSourceMode(value: string): DiagramSourceMode {
+  const normalized = value.trim().toLowerCase() as DiagramSourceMode;
+  if (!VALID_SOURCES.has(normalized)) {
+    throw new InvalidArgumentError("Source must be one of: rest, mcp, auto.");
   }
   return normalized;
 }
@@ -86,7 +94,7 @@ async function resolveToken(cliToken?: string): Promise<string> {
   throw new Error("Figma API token not found. Pass --token or set FIGMA_API_TOKEN.");
 }
 
-function selectPages(pages: ParsedPageDiagram[], requested?: string): ParsedPageDiagram[] {
+function selectPages<T extends { pageName: string }>(pages: T[], requested?: string): T[] {
   if (!requested?.trim()) {
     return pages;
   }
@@ -144,6 +152,12 @@ program
   .argument("<input>", "FigJam URL or file key")
   .option("-o, --output <path>", "Write Mermaid output to file")
   .option("--token <token>", "Figma API token (overrides FIGMA_API_TOKEN)")
+  .option(
+    "--source <mode>",
+    "Source mode: rest, mcp, or auto (auto tries MCP then falls back to REST)",
+    parseSourceMode,
+    "rest",
+  )
   .option("--page <name-or-index>", "Export only one page by name or 1-based index")
   .option(
     "-d, --direction <direction>",
@@ -154,22 +168,30 @@ program
   .option("--png", "Output as PNG image (<filename>.png, requires mmdc/mermaid-cli)")
   .option("--svg", "Output as SVG image (<filename>.svg, requires mmdc/mermaid-cli)")
   .action(async (input: string, options: CliOptions) => {
-    const fileKey = extractFileKey(input);
-    const token = await resolveToken(options.token);
-    const figmaFile = await fetchFigmaFile(fileKey, token);
-    const allPages = parseFigmaPages(figmaFile);
-    const pages = selectPages(allPages, options.page);
-
     const formatFlags = [options.markdown, options.png, options.svg].filter(Boolean).length;
     if (formatFlags > 1) {
       throw new Error("Use only one output format flag at a time: --markdown, --png, or --svg.");
     }
 
+    const token = await resolveToken(options.token);
+    const source = options.source ?? "rest";
+    const pipeline = await runDiagramPipeline({
+      input,
+      token,
+      source,
+      direction: options.direction,
+    });
+    const pages = selectPages<RenderedPageDiagram>(pipeline.pages, options.page);
+
     if (pages.length === 0) {
       throw new Error("No pages found to export.");
     }
 
-    const fileBaseName = sanitizeFilename(figmaFile.name ?? fileKey);
+    if (pipeline.fallbackUsed && source === "auto") {
+      process.stderr.write("Source auto fallback: MCP unavailable, using REST.\n");
+    }
+
+    const fileBaseName = sanitizeFilename(pipeline.fileName ?? pipeline.fileKey);
 
     if (pages.length === 1) {
       const [page] = pages;
@@ -177,7 +199,7 @@ program
         throw new Error("No page found to export.");
       }
 
-      const mermaid = toMermaid(page.diagram, { direction: options.direction });
+      const mermaid = page.mermaid;
 
       if (!options.output && !options.markdown && !options.png && !options.svg) {
         process.stdout.write(`${mermaid}\n`);
@@ -196,7 +218,7 @@ program
     }
 
     for (const page of pages) {
-      const mermaid = toMermaid(page.diagram, { direction: options.direction });
+      const mermaid = page.mermaid;
       const outPath = `${fileBaseName}-${sanitizeFilename(page.pageName)}${extensionFor(options)}`;
       await writeDiagramOutput(mermaid, outPath, options);
       process.stderr.write(`Written to ${outPath}\n`);

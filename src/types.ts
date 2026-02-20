@@ -1,4 +1,6 @@
 export type MermaidDirection = "TD" | "LR" | "TB" | "BT" | "RL";
+export type DiagramSourceKind = "rest" | "mcp";
+export type DiagramSourceMode = DiagramSourceKind | "auto";
 
 export interface FigmaEndpoint {
   endpointNodeId?: string;
@@ -32,7 +34,7 @@ export interface FigmaFileResponse {
 
 export type ParsedEdgeKind = "arrow" | "line" | "bidirectional";
 
-export interface ParsedNode {
+export interface CanonicalGraphNode {
   sourceId: string;
   label: string;
   shapeType?: string;
@@ -41,37 +43,52 @@ export interface ParsedNode {
   sectionId?: string;
 }
 
-export interface ParsedEdge {
+export interface CanonicalGraphEdge {
   sourceId: string;
   targetId: string;
   label?: string;
   kind: ParsedEdgeKind;
 }
 
-export interface ParsedStickyNote {
+export interface CanonicalStickyNote {
   sourceId: string;
   text: string;
 }
 
-export interface ParsedSection {
+export interface CanonicalSection {
   sourceId: string;
   label: string;
   nodeIds: string[];
 }
 
-export interface ParsedFlowDiagram {
-  nodes: ParsedNode[];
-  edges: ParsedEdge[];
-  sections: ParsedSection[];
-  stickyNotes: ParsedStickyNote[];
+export interface CanonicalGraph {
+  nodes: CanonicalGraphNode[];
+  edges: CanonicalGraphEdge[];
+  sections: CanonicalSection[];
+  stickyNotes: CanonicalStickyNote[];
 }
 
-export interface ParsedPageDiagram {
+export interface CanonicalPageGraph {
   pageId: string;
   pageName: string;
-  diagram: ParsedFlowDiagram;
+  diagram: CanonicalGraph;
+}
+
+export interface CanonicalDiagramDocument {
+  fileKey: string;
+  fileName?: string;
+  sourceKind: DiagramSourceKind;
+  pages: CanonicalPageGraph[];
 }
 
 export interface MermaidRenderOptions {
   direction?: MermaidDirection;
 }
+
+// Backward-compatible aliases during v0.4 migration.
+export type ParsedNode = CanonicalGraphNode;
+export type ParsedEdge = CanonicalGraphEdge;
+export type ParsedStickyNote = CanonicalStickyNote;
+export type ParsedSection = CanonicalSection;
+export type ParsedFlowDiagram = CanonicalGraph;
+export type ParsedPageDiagram = CanonicalPageGraph;

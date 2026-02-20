@@ -1,0 +1,61 @@
+{
+  "fileName": "MCP Fixture File",
+  "pages": [
+    {
+      "pageId": "page-1",
+      "pageName": "Main Flow",
+      "diagram": {
+        "nodes": [
+          {
+            "sourceId": "n-start",
+            "label": "Start",
+            "shapeType": "ROUNDED_RECTANGLE",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "sourceId": "n-check",
+            "label": "Check",
+            "shapeType": "DIAMOND",
+            "x": 220,
+            "y": 0
+          },
+          {
+            "sourceId": "n-done",
+            "label": "Done",
+            "shapeType": "RECTANGLE",
+            "x": 440,
+            "y": 0,
+            "sectionId": "section-main"
+          }
+        ],
+        "edges": [
+          {
+            "sourceId": "n-start",
+            "targetId": "n-check",
+            "kind": "arrow",
+            "label": "begin"
+          },
+          {
+            "sourceId": "n-check",
+            "targetId": "n-done",
+            "kind": "line"
+          }
+        ],
+        "sections": [
+          {
+            "sourceId": "section-main",
+            "label": "Core",
+            "nodeIds": ["n-done"]
+          }
+        ],
+        "stickyNotes": [
+          {
+            "sourceId": "sticky-1",
+            "text": "Manual verification"
+          }
+        ]
+      }
+    }
+  ]
+}

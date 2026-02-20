@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased (v0.4.0)
+
+### Added
+- Source adapter scaffolding for pluggable ingestion:
+  - Canonical graph/document typing for pipeline contracts.
+  - `DiagramSource` interface.
+  - `FigmaRestSource` for existing Figma REST ingestion.
+  - `McpHttpClient` transport contract for MCP HTTP ingestion.
+  - `FigmaMcpSource` wired to MCP transport and typed MCP payload ingestion.
+- New `--source <mode>` CLI option supporting `rest`, `mcp`, and `auto`.
+- MCP payload contract support for `fileName?` and `pages[].diagram`:
+  - `nodes`
+  - `edges`
+  - `sections`
+  - `stickyNotes`
+- New MCP-focused tests:
+  - Endpoint-missing errors.
+  - Mocked MCP HTTP ingestion.
+  - MCP normalization validation and Mermaid parity.
+- v0.4.0 implementation plan at `docs/v0.4.0-plan.md`.
+
+### Changed
+- Introduced staged pipeline modules: `ingest -> normalize -> transform -> render`.
+- Default source behavior remains REST for backward compatibility when `--source` is omitted.
+- `--source auto` now attempts MCP and falls back to REST when MCP endpoint is unavailable.
+- `--source mcp` now requires MCP endpoint configuration and returns actionable configuration errors.
+
 ## 0.3.1 - 2026-02-20
 
 ### Added
