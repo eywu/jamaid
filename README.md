@@ -36,8 +36,6 @@ npx tsx src/index.ts ABC123 --png
 # Render as SVG image (requires mermaid-cli)
 npx tsx src/index.ts ABC123 --svg
 
-# Render as interactive HTML (embedded SVG, requires mermaid-cli)
-npx tsx src/index.ts ABC123 --html
 ```
 
 ## CLI
@@ -55,7 +53,6 @@ Options:
   --markdown               Output as Markdown (.md) with fenced mermaid code block
   --png                    Output as PNG image (.png, requires mmdc)
   --svg                    Output as SVG image (.svg, requires mmdc)
-  --html                   Output as HTML with embedded interactive SVG (.html)
   -h, --help               Display help
 ```
 
@@ -68,9 +65,8 @@ Options:
 | `--markdown` | Fenced mermaid in Markdown | `<figjam-name>.md` |
 | `--png`      | PNG image                  | `<figjam-name>.png` |
 | `--svg`      | SVG image                  | `<figjam-name>.svg` |
-| `--html`     | Interactive HTML (embedded SVG) | `<figjam-name>.html` |
 
-For `--markdown`, `--png`, `--svg`, and `--html`, the filename is derived from the FigJam file name. Override with `-o custom.ext`.
+For `--markdown`, `--png`, and `--svg`, the filename is derived from the FigJam file name. Override with `-o custom.ext`.
 
 **PNG/SVG rendering** requires [mermaid-cli](https://github.com/mermaid-js/mermaid-cli):
 
@@ -78,7 +74,6 @@ For `--markdown`, `--png`, `--svg`, and `--html`, the filename is derived from t
 npm i -g @mermaid-js/mermaid-cli
 ```
 
-`--html` generates a standalone HTML file that loads Mermaid from jsDelivr at runtime (internet required when viewing).
 
 ### Token Lookup
 

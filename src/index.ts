@@ -21,7 +21,6 @@ type CliOptions = {
   markdown?: boolean;
   png?: boolean;
   svg?: boolean;
-  html?: boolean;
 };
 
 function sanitizeFilename(name: string): string {
@@ -42,34 +41,6 @@ async function renderWithMmdc(mermaid: string, outPath: string, format: "png" | 
   } finally {
     await import("node:fs/promises").then((fs) => fs.unlink(tmpMmd).catch(() => {}));
   }
-}
-
-function toInteractiveHtml(mermaid: string, title: string): string {
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title}</title>
-    <style>
-      body { margin: 0; padding: 24px; font-family: Inter, system-ui, -apple-system, sans-serif; background: #0b0f14; color: #e6edf3; }
-      .wrap { max-width: 1400px; margin: 0 auto; }
-      .mermaid { background: #11161d; border: 1px solid #1f2937; border-radius: 12px; padding: 16px; overflow: auto; }
-    </style>
-    <script type="module">
-      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-      mermaid.initialize({ startOnLoad: true, securityLevel: "loose", theme: "dark" });
-    </script>
-  </head>
-  <body>
-    <div class="wrap">
-      <div class="mermaid">
-${mermaid}
-      </div>
-    </div>
-  </body>
-</html>
-`;
 }
 
 const VALID_DIRECTIONS = new Set<MermaidDirection>(["TD", "LR", "TB", "BT", "RL"]);
@@ -130,7 +101,6 @@ program
   .option("--markdown", "Output as Markdown with fenced mermaid code block (<filename>.md)")
   .option("--png", "Output as PNG image (<filename>.png, requires mmdc/mermaid-cli)")
   .option("--svg", "Output as SVG image (<filename>.svg, requires mmdc/mermaid-cli)")
-  .option("--html", "Output as HTML with embedded interactive Mermaid SVG (<filename>.html)")
   .action(async (input: string, options: CliOptions) => {
     const fileKey = extractFileKey(input);
     const token = await resolveToken(options.token);
@@ -140,9 +110,9 @@ program
 
     const baseName = sanitizeFilename(figmaFile.name ?? fileKey);
 
-    const formatFlags = [options.markdown, options.png, options.svg, options.html].filter(Boolean).length;
+    const formatFlags = [options.markdown, options.png, options.svg].filter(Boolean).length;
     if (formatFlags > 1) {
-      throw new Error("Use only one output format flag at a time: --markdown, --png, --svg, or --html.");
+      throw new Error("Use only one output format flag at a time: --markdown, --png, or --svg.");
     }
 
     if (options.markdown) {
@@ -163,14 +133,6 @@ program
     if (options.svg) {
       const outPath = options.output ?? `${baseName}.svg`;
       await renderWithMmdc(mermaid, outPath, "svg");
-      process.stderr.write(`Written to ${outPath}\n`);
-      return;
-    }
-
-    if (options.html) {
-      const outPath = options.output ?? `${baseName}.html`;
-      const html = toInteractiveHtml(mermaid, figmaFile.name ?? "jamaid output");
-      await writeFile(outPath, html, "utf8");
       process.stderr.write(`Written to ${outPath}\n`);
       return;
     }
