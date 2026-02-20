@@ -22,6 +22,9 @@ npx tsx src/index.ts https://www.figma.com/board/ABC123/My-Board
 # Save as .mmd file
 npx tsx src/index.ts ABC123 -o output.mmd
 
+# Pass token inline (overrides FIGMA_API_TOKEN)
+npx tsx src/index.ts ABC123 --token figd_xxx -o output.mmd
+
 # Save as Markdown with fenced mermaid code block
 npx tsx src/index.ts ABC123 --markdown
 
