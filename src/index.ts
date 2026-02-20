@@ -9,8 +9,8 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { extractFileKey, fetchFigmaFile } from "./figma.js";
 import { toMermaid } from "./mermaid.js";
-import { parseFigmaFile } from "./parser.js";
-import type { MermaidDirection } from "./types.js";
+import { parseFigmaPages } from "./parser.js";
+import type { MermaidDirection, ParsedPageDiagram } from "./types.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -21,6 +21,7 @@ type CliOptions = {
   markdown?: boolean;
   png?: boolean;
   svg?: boolean;
+  page?: string;
 };
 
 function sanitizeFilename(name: string): string {
@@ -85,6 +86,56 @@ async function resolveToken(cliToken?: string): Promise<string> {
   throw new Error("Figma API token not found. Pass --token or set FIGMA_API_TOKEN.");
 }
 
+function selectPages(pages: ParsedPageDiagram[], requested?: string): ParsedPageDiagram[] {
+  if (!requested?.trim()) {
+    return pages;
+  }
+
+  const selector = requested.trim();
+  if (/^\d+$/.test(selector)) {
+    const index = Number.parseInt(selector, 10);
+    const page = pages[index - 1];
+    if (!page) {
+      throw new Error(`Page index ${index} is out of range. Found ${pages.length} page(s).`);
+    }
+    return [page];
+  }
+
+  const lowered = selector.toLowerCase();
+  const byName = pages.find((page) => page.pageName.toLowerCase() === lowered);
+  if (!byName) {
+    throw new Error(`Page \"${selector}\" not found. Available pages: ${pages.map((p, i) => `${i + 1}:${p.pageName}`).join(", ")}`);
+  }
+  return [byName];
+}
+
+function extensionFor(options: CliOptions): string {
+  if (options.markdown) return ".md";
+  if (options.png) return ".png";
+  if (options.svg) return ".svg";
+  return ".mmd";
+}
+
+function defaultContent(mermaid: string, options: CliOptions): string {
+  if (options.markdown) {
+    return `\`\`\`mermaid\n${mermaid}\n\`\`\`\n`;
+  }
+  return `${mermaid}\n`;
+}
+
+async function writeDiagramOutput(mermaid: string, outPath: string, options: CliOptions) {
+  if (options.png) {
+    await renderWithMmdc(mermaid, outPath, "png");
+    return;
+  }
+  if (options.svg) {
+    await renderWithMmdc(mermaid, outPath, "svg");
+    return;
+  }
+
+  await writeFile(outPath, defaultContent(mermaid, options), "utf8");
+}
+
 const program = new Command();
 
 program
@@ -93,6 +144,7 @@ program
   .argument("<input>", "FigJam URL or file key")
   .option("-o, --output <path>", "Write Mermaid output to file")
   .option("--token <token>", "Figma API token (overrides FIGMA_API_TOKEN)")
+  .option("--page <name-or-index>", "Export only one page by name or 1-based index")
   .option(
     "-d, --direction <direction>",
     "Mermaid flow direction override (TD, LR, TB, BT, RL)",
@@ -105,44 +157,50 @@ program
     const fileKey = extractFileKey(input);
     const token = await resolveToken(options.token);
     const figmaFile = await fetchFigmaFile(fileKey, token);
-    const diagram = parseFigmaFile(figmaFile);
-    const mermaid = toMermaid(diagram, { direction: options.direction });
-
-    const baseName = sanitizeFilename(figmaFile.name ?? fileKey);
+    const allPages = parseFigmaPages(figmaFile);
+    const pages = selectPages(allPages, options.page);
 
     const formatFlags = [options.markdown, options.png, options.svg].filter(Boolean).length;
     if (formatFlags > 1) {
       throw new Error("Use only one output format flag at a time: --markdown, --png, or --svg.");
     }
 
-    if (options.markdown) {
-      const mdContent = `\`\`\`mermaid\n${mermaid}\n\`\`\`\n`;
-      const mdPath = options.output ?? `${baseName}.md`;
-      await writeFile(mdPath, mdContent, "utf8");
-      process.stderr.write(`Written to ${mdPath}\n`);
-      return;
+    if (pages.length === 0) {
+      throw new Error("No pages found to export.");
     }
 
-    if (options.png) {
-      const outPath = options.output ?? `${baseName}.png`;
-      await renderWithMmdc(mermaid, outPath, "png");
-      process.stderr.write(`Written to ${outPath}\n`);
-      return;
-    }
+    const fileBaseName = sanitizeFilename(figmaFile.name ?? fileKey);
 
-    if (options.svg) {
-      const outPath = options.output ?? `${baseName}.svg`;
-      await renderWithMmdc(mermaid, outPath, "svg");
+    if (pages.length === 1) {
+      const [page] = pages;
+      if (!page) {
+        throw new Error("No page found to export.");
+      }
+
+      const mermaid = toMermaid(page.diagram, { direction: options.direction });
+
+      if (!options.output && !options.markdown && !options.png && !options.svg) {
+        process.stdout.write(`${mermaid}\n`);
+        return;
+      }
+
+      const defaultName = `${fileBaseName}-${sanitizeFilename(page.pageName)}${extensionFor(options)}`;
+      const outPath = options.output ?? defaultName;
+      await writeDiagramOutput(mermaid, outPath, options);
       process.stderr.write(`Written to ${outPath}\n`);
       return;
     }
 
     if (options.output) {
-      await writeFile(options.output, `${mermaid}\n`, "utf8");
-      return;
+      throw new Error("--output can only be used with a single page. Use --page to select one page, or omit --output to export all pages automatically.");
     }
 
-    process.stdout.write(`${mermaid}\n`);
+    for (const page of pages) {
+      const mermaid = toMermaid(page.diagram, { direction: options.direction });
+      const outPath = `${fileBaseName}-${sanitizeFilename(page.pageName)}${extensionFor(options)}`;
+      await writeDiagramOutput(mermaid, outPath, options);
+      process.stderr.write(`Written to ${outPath}\n`);
+    }
   });
 
 program.parseAsync(process.argv).catch((error: unknown) => {

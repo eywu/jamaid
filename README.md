@@ -16,11 +16,14 @@ npm install
 ## Usage
 
 ```bash
-# Output mermaid to stdout
+# Output mermaid to stdout (single-page files)
 npx tsx src/index.ts https://www.figma.com/board/ABC123/My-Board
 
-# Save as .mmd file
-npx tsx src/index.ts ABC123 -o output.mmd
+# Multi-page files auto-export one output per page
+npx tsx src/index.ts https://www.figma.com/board/ABC123/My-Board
+
+# Save one selected page as .mmd file
+npx tsx src/index.ts ABC123 --page 2 -o output.mmd
 
 # Pass token inline (overrides FIGMA_API_TOKEN)
 npx tsx src/index.ts ABC123 --token figd_xxx -o output.mmd
@@ -47,6 +50,7 @@ Arguments:
 Options:
   -o, --output <path>      Write output to file (overrides default filename)
   --token <token>          Figma API token (overrides FIGMA_API_TOKEN)
+  --page <name-or-index>   Export only one page by name or 1-based index
   -d, --direction <dir>    Override direction: TD, LR, TB, BT, RL
   --markdown               Output as Markdown (.md) with fenced mermaid code block
   --png                    Output as PNG image (.png, requires mmdc)
@@ -64,7 +68,14 @@ Options:
 | `--png`      | PNG image                  | `<figjam-name>.png` |
 | `--svg`      | SVG image                  | `<figjam-name>.svg` |
 
-For `--markdown`, `--png`, and `--svg`, the filename is derived from the FigJam file name. Override with `-o custom.ext`.
+For `--markdown`, `--png`, and `--svg`, the filename is derived from the FigJam file/page name (`<figjam-name>-<page-name>.<ext>`).
+Use `-o custom.ext` only when exporting a single page (`--page ...`).
+
+### Multi-page behavior
+
+- If a file has multiple pages and you do **not** pass `--page`, jamaid writes one output file per page.
+- If you pass `--page`, jamaid exports only that page (and supports `-o`).
+- `--page` accepts either a 1-based index (`--page 2`) or exact page name (`--page "Discovery Flow"`).
 
 **PNG/SVG rendering** requires [mermaid-cli](https://github.com/mermaid-js/mermaid-cli):
 

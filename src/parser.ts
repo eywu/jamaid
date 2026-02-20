@@ -5,6 +5,7 @@ import type {
   ParsedEdgeKind,
   ParsedFlowDiagram,
   ParsedNode,
+  ParsedPageDiagram,
   ParsedSection,
   ParsedStickyNote,
 } from "./types.js";
@@ -104,7 +105,7 @@ function parseStickyNode(node: FigmaNode): ParsedStickyNote | null {
   };
 }
 
-export function parseFigmaFile(file: FigmaFileResponse): ParsedFlowDiagram {
+function parseFromRoot(root: FigmaNode): ParsedFlowDiagram {
   const nodesById = new Map<string, ParsedNode>();
   const edges: ParsedEdge[] = [];
   const stickyNotes: ParsedStickyNote[] = [];
@@ -151,7 +152,7 @@ export function parseFigmaFile(file: FigmaFileResponse): ParsedFlowDiagram {
     }
   }
 
-  visit(file.document);
+  visit(root);
 
   const validEdges = edges.filter(
     (edge) => nodesById.has(edge.sourceId) && nodesById.has(edge.targetId),
@@ -163,4 +164,32 @@ export function parseFigmaFile(file: FigmaFileResponse): ParsedFlowDiagram {
     sections: Array.from(sectionsById.values()).filter((section) => section.nodeIds.length > 0),
     stickyNotes,
   };
+}
+
+export function parseFigmaPages(file: FigmaFileResponse): ParsedPageDiagram[] {
+  const canvases = (file.document.children ?? []).filter((node) => node.type === "CANVAS");
+
+  if (canvases.length === 0) {
+    return [
+      {
+        pageId: file.document.id,
+        pageName: cleanText(file.document.name) || "Page 1",
+        diagram: parseFromRoot(file.document),
+      },
+    ];
+  }
+
+  return canvases.map((canvas, index) => ({
+    pageId: canvas.id,
+    pageName: cleanText(canvas.name) || `Page ${index + 1}`,
+    diagram: parseFromRoot(canvas),
+  }));
+}
+
+export function parseFigmaFile(file: FigmaFileResponse): ParsedFlowDiagram {
+  const [firstPage] = parseFigmaPages(file);
+  if (!firstPage) {
+    return { nodes: [], edges: [], sections: [], stickyNotes: [] };
+  }
+  return firstPage.diagram;
 }

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { parseFigmaFile } from "../src/parser.js";
+import { parseFigmaFile, parseFigmaPages } from "../src/parser.js";
 import type { FigmaFileResponse } from "../src/types.js";
 
 async function loadFixture(): Promise<FigmaFileResponse> {
@@ -40,5 +40,41 @@ describe("parseFigmaFile", () => {
     }
     expect(coreSection.label).toBe("Core Flow");
     expect(coreSection.nodeIds).toEqual(["3:1", "3:2", "3:3"]);
+  });
+});
+
+describe("parseFigmaPages", () => {
+  it("splits a figma file into page-scoped diagrams", async () => {
+    const file = await loadFixture();
+    const firstCanvas = file.document.children?.[0];
+    if (!firstCanvas?.children) {
+      throw new Error("Expected fixture to contain first canvas");
+    }
+
+    const cloned = structuredClone(file);
+    cloned.document.children = [
+      cloned.document.children?.[0],
+      {
+        id: "9:9",
+        type: "CANVAS",
+        name: "Page 2",
+        children: [
+          {
+            id: "9:10",
+            type: "SHAPE_WITH_TEXT",
+            shapeType: "RECTANGLE",
+            children: [{ id: "9:10:1", type: "TEXT", characters: "Second Page Node" }],
+          },
+        ],
+      },
+    ].filter(Boolean) as FigmaFileResponse["document"]["children"];
+
+    const pages = parseFigmaPages(cloned);
+
+    expect(pages).toHaveLength(2);
+    expect(pages[0]?.pageName).toBe("Page 1");
+    expect(pages[1]?.pageName).toBe("Page 2");
+    expect(pages[0]?.diagram.nodes).toHaveLength(4);
+    expect(pages[1]?.diagram.nodes.map((n) => n.label)).toEqual(["Second Page Node"]);
   });
 });

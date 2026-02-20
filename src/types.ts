@@ -66,6 +66,12 @@ export interface ParsedFlowDiagram {
   stickyNotes: ParsedStickyNote[];
 }
 
+export interface ParsedPageDiagram {
+  pageId: string;
+  pageName: string;
+  diagram: ParsedFlowDiagram;
+}
+
 export interface MermaidRenderOptions {
   direction?: MermaidDirection;
 }
