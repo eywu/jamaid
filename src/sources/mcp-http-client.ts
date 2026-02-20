@@ -1,4 +1,5 @@
 import type { McpDiagramPayload } from "./diagram-source.js";
+import { parseMcpXmlPayload } from "./mcp-xml.js";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
@@ -114,10 +115,23 @@ export class McpHttpClient implements McpTransport {
         throw new Error(`MCP endpoint request failed (${response.status}): ${detail}`);
       }
 
+      const responseText = await response.text();
+      const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+      const trimmed = responseText.trim();
+
+      if (contentType.includes("xml") || trimmed.startsWith("<")) {
+        try {
+          return parseMcpXmlPayload(responseText);
+        } catch (error: unknown) {
+          const detail = error instanceof Error ? error.message : String(error);
+          throw new Error(`MCP endpoint returned invalid XML: ${detail}`);
+        }
+      }
+
       try {
-        return (await response.json()) as McpDiagramPayload;
+        return JSON.parse(responseText) as McpDiagramPayload;
       } catch {
-        throw new Error("MCP endpoint returned invalid JSON.");
+        throw new Error("MCP endpoint returned invalid JSON/XML payload.");
       }
     } catch (error: unknown) {
       if (isAbortError(error)) {

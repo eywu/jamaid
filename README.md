@@ -114,13 +114,18 @@ For `--source file|stdin`, use `--format` to choose the payload contract:
 
 Set these env vars to enable `--source mcp` (or `--source auto` MCP-first behavior):
 
-- `JAMAID_MCP_ENDPOINT_URL` (required): HTTP endpoint that returns MCP diagram payload.
+- `JAMAID_MCP_ENDPOINT_URL` (required): HTTP endpoint that returns MCP data payload (XML from `get_figjam`, or JSON).
 - `JAMAID_MCP_AUTH_TOKEN` (optional): bearer token sent as `Authorization: Bearer <token>`.
 - `JAMAID_MCP_TIMEOUT_MS` (optional): request timeout in milliseconds (default: `10000`).
 
 If `JAMAID_MCP_ENDPOINT_URL` is not set, `--source mcp` fails with an actionable error and `--source auto` falls back to REST.
 
-MCP response payload contract (minimal shape):
+MCP response payload contract (jamaid accepts either):
+
+1) XML response from `get_figjam` (primary)
+2) JSON diagram payload (legacy/compat)
+
+JSON contract (minimal shape):
 
 ```json
 {

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.2 - 2026-02-20
+
+### Added
+- MCP XML response support for `--source mcp` / `--source auto`.
+- New XML parser pipeline that maps FigJam MCP XML elements (`canvas`, `shape-with-text`, `connector`, `sticky`) into jamaid's MCP diagram payload contract.
+
+### Changed
+- `McpHttpClient` now accepts both XML and JSON endpoint responses.
+- Improved MCP parse errors to surface invalid XML payload details.
+- Added test coverage for XML MCP ingestion.
+
 ## 0.4.1 - 2026-02-20
 
 ### Added
