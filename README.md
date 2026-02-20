@@ -50,7 +50,7 @@ Options:
   --markdown               Output as Markdown (.md) with fenced mermaid code block
   --png                    Output as PNG image (.png, requires mmdc)
   --svg                    Output as SVG image (.svg, requires mmdc)
-  --html                   Output as HTML with embedded interactive SVG (.html, requires mmdc)
+  --html                   Output as HTML with embedded interactive SVG (.html)
   -h, --help               Display help
 ```
 
@@ -67,11 +67,13 @@ Options:
 
 For `--markdown`, `--png`, `--svg`, and `--html`, the filename is derived from the FigJam file name. Override with `-o custom.ext`.
 
-**PNG/SVG/HTML rendering** requires [mermaid-cli](https://github.com/mermaid-js/mermaid-cli):
+**PNG/SVG rendering** requires [mermaid-cli](https://github.com/mermaid-js/mermaid-cli):
 
 ```bash
 npm i -g @mermaid-js/mermaid-cli
 ```
+
+`--html` generates a standalone HTML file that loads Mermaid from jsDelivr at runtime (internet required when viewing).
 
 ### Token Lookup
 
