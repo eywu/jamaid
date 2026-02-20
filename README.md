@@ -85,7 +85,7 @@ Use `-o custom.ext` only when exporting a single page (`--page ...`).
 
 - `--source rest`: Use Figma REST API ingestion (default).
 - `--source mcp`: Use MCP HTTP transport ingestion.
-- `--source auto`: Try MCP first; if MCP is unavailable, fallback to REST automatically.
+- `--source auto`: Try MCP first; on MCP unavailability, network `TypeError`, timeout, or 5xx endpoint errors, fallback to REST automatically.
 
 If `--source` is omitted, jamaid behaves exactly like prior versions and uses REST only.
 

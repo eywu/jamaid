@@ -47,6 +47,41 @@ export interface RunPipelineResult {
   pages: RenderedPageDiagram[];
 }
 
+const MCP_HTTP_FAILURE_PATTERN = /^MCP endpoint request failed \((\d{3})\):/;
+const MCP_TIMEOUT_MESSAGE_PREFIX = "MCP endpoint request timed out after";
+
+function mcpErrorStatusCode(error: unknown): number | undefined {
+  if (!(error instanceof Error)) {
+    return undefined;
+  }
+  const match = error.message.match(MCP_HTTP_FAILURE_PATTERN);
+  if (!match?.[1]) {
+    return undefined;
+  }
+  const status = Number.parseInt(match[1], 10);
+  if (!Number.isFinite(status)) {
+    return undefined;
+  }
+  return status;
+}
+
+function isMcpAutoFallbackError(error: unknown): boolean {
+  if (isMcpSourceUnavailableError(error)) {
+    return true;
+  }
+  if (error instanceof TypeError) {
+    return true;
+  }
+  if (
+    error instanceof Error &&
+    error.message.startsWith(MCP_TIMEOUT_MESSAGE_PREFIX)
+  ) {
+    return true;
+  }
+  const status = mcpErrorStatusCode(error);
+  return typeof status === "number" && status >= 500 && status < 600;
+}
+
 export async function ingestDiagram(options: IngestPipelineOptions): Promise<IngestResult> {
   const sources = options.sources ?? createSourcesForMode(options.source);
   let lastError: unknown;
@@ -72,7 +107,7 @@ export async function ingestDiagram(options: IngestPipelineOptions): Promise<Ing
       const canFallback =
         options.source === "auto" &&
         source.kind === "mcp" &&
-        isMcpSourceUnavailableError(error);
+        isMcpAutoFallbackError(error);
       if (canFallback) {
         continue;
       }

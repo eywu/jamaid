@@ -188,7 +188,7 @@ program
     }
 
     if (pipeline.fallbackUsed && source === "auto") {
-      process.stderr.write("Source auto fallback: MCP unavailable, using REST.\n");
+      process.stderr.write("Source auto fallback: MCP failed, using REST.\n");
     }
 
     const fileBaseName = sanitizeFilename(pipeline.fileName ?? pipeline.fileKey);

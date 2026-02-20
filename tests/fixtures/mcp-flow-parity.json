@@ -1,0 +1,82 @@
+{
+  "fileName": "Example Flow",
+  "pages": [
+    {
+      "pageId": "1:1",
+      "pageName": "Page 1",
+      "diagram": {
+        "nodes": [
+          {
+            "sourceId": "3:1",
+            "label": "Start",
+            "shapeType": "ROUNDED_RECTANGLE",
+            "x": 100,
+            "y": 100,
+            "sectionId": "2:1"
+          },
+          {
+            "sourceId": "3:2",
+            "label": "Approved?",
+            "shapeType": "DIAMOND",
+            "x": 420,
+            "y": 110,
+            "sectionId": "2:1"
+          },
+          {
+            "sourceId": "3:3",
+            "label": "Done",
+            "shapeType": "ELLIPSE",
+            "x": 740,
+            "y": 130,
+            "sectionId": "2:1"
+          },
+          {
+            "sourceId": "4:1",
+            "label": "Archive",
+            "shapeType": "ENG_DATABASE",
+            "x": 1060,
+            "y": 150
+          }
+        ],
+        "edges": [
+          {
+            "sourceId": "3:1",
+            "targetId": "3:2",
+            "kind": "arrow",
+            "label": "submit"
+          },
+          {
+            "sourceId": "3:2",
+            "targetId": "3:3",
+            "kind": "arrow",
+            "label": "yes"
+          },
+          {
+            "sourceId": "3:3",
+            "targetId": "4:1",
+            "kind": "line"
+          },
+          {
+            "sourceId": "4:1",
+            "targetId": "3:1",
+            "kind": "bidirectional",
+            "label": "sync"
+          }
+        ],
+        "sections": [
+          {
+            "sourceId": "2:1",
+            "label": "Core Flow",
+            "nodeIds": ["3:1", "3:2", "3:3"]
+          }
+        ],
+        "stickyNotes": [
+          {
+            "sourceId": "6:1",
+            "text": "Manual verification"
+          }
+        ]
+      }
+    }
+  ]
+}

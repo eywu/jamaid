@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (v0.4.0)
+## 0.4.0 - 2026-02-20
 
 ### Added
 - Source adapter scaffolding for pluggable ingestion:
@@ -19,12 +19,13 @@
   - Endpoint-missing errors.
   - Mocked MCP HTTP ingestion.
   - MCP normalization validation and Mermaid parity.
+- MCP↔REST parity coverage using equivalent fixtures and Mermaid output assertions.
 - v0.4.0 implementation plan at `docs/v0.4.0-plan.md`.
 
 ### Changed
 - Introduced staged pipeline modules: `ingest -> normalize -> transform -> render`.
 - Default source behavior remains REST for backward compatibility when `--source` is omitted.
-- `--source auto` now attempts MCP and falls back to REST when MCP endpoint is unavailable.
+- `--source auto` now attempts MCP and falls back to REST when MCP is unavailable, times out, returns 5xx, or fails with network `TypeError`.
 - `--source mcp` now requires MCP endpoint configuration and returns actionable configuration errors.
 
 ## 0.3.1 - 2026-02-20
