@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 - 2026-02-19
+
+### Changed
+- Removed interactive HTML output mode (`--html`) from the CLI.
+- Simplified supported output formats to: raw Mermaid, Markdown (`--markdown`), PNG (`--png`), and SVG (`--svg`).
+- Updated README and CLI help text to reflect the supported output modes.
+
 ## 0.1.0 - 2026-02-19
 
 ### Added
