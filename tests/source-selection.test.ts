@@ -49,6 +49,8 @@ describe("sourceModeOrder", () => {
     expect(sourceModeOrder("rest")).toEqual(["rest"]);
     expect(sourceModeOrder("mcp")).toEqual(["mcp"]);
     expect(sourceModeOrder("auto")).toEqual(["mcp", "rest"]);
+    expect(sourceModeOrder("file")).toEqual(["file"]);
+    expect(sourceModeOrder("stdin")).toEqual(["stdin"]);
   });
 });
 

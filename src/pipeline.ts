@@ -7,7 +7,8 @@ import {
 import { createSourcesForMode } from "./sources/select-source.js";
 import type {
   CanonicalDiagramDocument,
-  DiagramSourceKind,
+  DiagramInputFormat,
+  DiagramInputSourceKind,
   DiagramSourceMode,
   MermaidDirection,
 } from "./types.js";
@@ -16,11 +17,12 @@ export interface IngestPipelineOptions {
   input: string;
   token: string;
   source: DiagramSourceMode;
+  format?: DiagramInputFormat;
   sources?: DiagramSource[];
 }
 
 export interface IngestResult {
-  selectedSource: DiagramSourceKind;
+  selectedSource: DiagramInputSourceKind;
   fallbackUsed: boolean;
   ingested: IngestedDiagramDocument;
 }
@@ -40,7 +42,7 @@ export interface RunPipelineOptions extends IngestPipelineOptions {
 
 export interface RunPipelineResult {
   requestedSource: DiagramSourceMode;
-  selectedSource: DiagramSourceKind;
+  selectedSource: DiagramInputSourceKind;
   fallbackUsed: boolean;
   fileKey: string;
   fileName?: string;
@@ -96,6 +98,7 @@ export async function ingestDiagram(options: IngestPipelineOptions): Promise<Ing
       const ingested = await source.ingest({
         input: options.input,
         token: options.token,
+        format: options.format,
       });
       return {
         selectedSource: source.kind,

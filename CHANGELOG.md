@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.4.1 - 2026-02-20
+
+### Added
+- New JSON ingestion source modes:
+  - `--source file`: load JSON payload from file path input.
+  - `--source stdin`: load JSON payload from standard input.
+- New `--format rest|mcp|auto` option for `file/stdin` sources.
+- Auto-detection for `--format auto`:
+  - Detects REST payloads via Figma-like `document` root shape.
+  - Detects MCP payloads via `pages[].diagram` arrays.
+  - Returns actionable guidance when payload shape is ambiguous.
+- New validators for REST and MCP JSON payload contracts with path-based errors.
+- Test coverage for:
+  - file-source ingestion for REST and MCP payloads,
+  - stdin-source ingestion for REST and MCP payloads,
+  - JSON format auto-detection success/failure,
+  - CLI parsing/validation edge cases for `--source` and `--format`.
+
+### Changed
+- `jamaid` positional input is now optional at parse level to support `--source stdin`, with mode-specific validation preserving existing behavior.
+- `rest/mcp/auto` behavior remains backward compatible; token lookup is skipped for `file/stdin`.
+
 ## 0.4.0 - 2026-02-20
 
 ### Added

@@ -7,8 +7,18 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import {
+  isJsonInputSource,
+  parseInputFormat,
+  parseSourceMode,
+  resolveCliIngestOptions,
+} from "./cli-options.js";
 import { runDiagramPipeline, type RenderedPageDiagram } from "./pipeline.js";
-import type { DiagramSourceMode, MermaidDirection } from "./types.js";
+import type {
+  DiagramInputFormat,
+  DiagramSourceMode,
+  MermaidDirection,
+} from "./types.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -16,6 +26,7 @@ type CliOptions = {
   output?: string;
   token?: string;
   source?: DiagramSourceMode;
+  format?: DiagramInputFormat;
   direction?: MermaidDirection;
   markdown?: boolean;
   png?: boolean;
@@ -44,20 +55,11 @@ async function renderWithMmdc(mermaid: string, outPath: string, format: "png" | 
 }
 
 const VALID_DIRECTIONS = new Set<MermaidDirection>(["TD", "LR", "TB", "BT", "RL"]);
-const VALID_SOURCES = new Set<DiagramSourceMode>(["rest", "mcp", "auto"]);
 
 function parseDirection(value: string): MermaidDirection {
   const normalized = value.trim().toUpperCase() as MermaidDirection;
   if (!VALID_DIRECTIONS.has(normalized)) {
     throw new InvalidArgumentError("Direction must be one of: TD, LR, TB, BT, RL.");
-  }
-  return normalized;
-}
-
-function parseSourceMode(value: string): DiagramSourceMode {
-  const normalized = value.trim().toLowerCase() as DiagramSourceMode;
-  if (!VALID_SOURCES.has(normalized)) {
-    throw new InvalidArgumentError("Source must be one of: rest, mcp, auto.");
   }
   return normalized;
 }
@@ -149,14 +151,20 @@ const program = new Command();
 program
   .name("jamaid")
   .description("Convert FigJam flow diagrams into Mermaid markdown")
-  .argument("<input>", "FigJam URL or file key")
+  .argument("[input]", "FigJam URL/file key or JSON file path (depends on --source)")
   .option("-o, --output <path>", "Write Mermaid output to file")
   .option("--token <token>", "Figma API token (overrides FIGMA_API_TOKEN)")
   .option(
     "--source <mode>",
-    "Source mode: rest, mcp, or auto (auto tries MCP then falls back to REST)",
+    "Source mode: rest, mcp, auto, file, stdin",
     parseSourceMode,
     "rest",
+  )
+  .option(
+    "--format <format>",
+    "Input JSON format for --source file|stdin: rest, mcp, auto",
+    parseInputFormat,
+    "auto",
   )
   .option("--page <name-or-index>", "Export only one page by name or 1-based index")
   .option(
@@ -167,18 +175,21 @@ program
   .option("--markdown", "Output as Markdown with fenced mermaid code block (<filename>.md)")
   .option("--png", "Output as PNG image (<filename>.png, requires mmdc/mermaid-cli)")
   .option("--svg", "Output as SVG image (<filename>.svg, requires mmdc/mermaid-cli)")
-  .action(async (input: string, options: CliOptions) => {
+  .action(async (input: string | undefined, options: CliOptions) => {
     const formatFlags = [options.markdown, options.png, options.svg].filter(Boolean).length;
     if (formatFlags > 1) {
       throw new Error("Use only one output format flag at a time: --markdown, --png, or --svg.");
     }
 
-    const token = await resolveToken(options.token);
     const source = options.source ?? "rest";
+    const ingestOptions = resolveCliIngestOptions(source, input);
+    const token = ingestOptions.requiresToken ? await resolveToken(options.token) : "";
+    const format = options.format ?? "auto";
     const pipeline = await runDiagramPipeline({
-      input,
+      input: ingestOptions.input,
       token,
       source,
+      format: isJsonInputSource(source) ? format : undefined,
       direction: options.direction,
     });
     const pages = selectPages<RenderedPageDiagram>(pipeline.pages, options.page);

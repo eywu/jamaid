@@ -1,6 +1,8 @@
 export type MermaidDirection = "TD" | "LR" | "TB" | "BT" | "RL";
 export type DiagramSourceKind = "rest" | "mcp";
-export type DiagramSourceMode = DiagramSourceKind | "auto";
+export type DiagramSourceMode = DiagramSourceKind | "auto" | "file" | "stdin";
+export type DiagramInputSourceKind = DiagramSourceKind | "file" | "stdin";
+export type DiagramInputFormat = DiagramSourceKind | "auto";
 
 export interface FigmaEndpoint {
   endpointNodeId?: string;

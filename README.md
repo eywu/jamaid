@@ -5,7 +5,7 @@ Convert FigJam flow diagrams into Mermaid 🧜‍♀️ flowchart markdown.
 ## Requirements
 
 - Node.js 18+
-- A Figma API token with `file_content:read` scope
+- A Figma API token with `file_content:read` scope for `--source rest|mcp|auto` (not required for `--source file|stdin`)
 
 ## Install
 
@@ -27,6 +27,15 @@ npx tsx src/index.ts ABC123 --source auto
 
 # MCP source mode (requires MCP endpoint env var)
 npx tsx src/index.ts ABC123 --source mcp
+
+# JSON file source (REST payload)
+npx tsx src/index.ts ./diagram-rest.json --source file --format rest
+
+# JSON file source (MCP payload; auto-detect format)
+npx tsx src/index.ts ./diagram-mcp.json --source file --format auto
+
+# stdin source (input argument optional in stdin mode)
+cat ./diagram.json | npx tsx src/index.ts --source stdin --format auto
 
 # Multi-page files auto-export one output per page
 npx tsx src/index.ts https://www.figma.com/board/ABC123/My-Board
@@ -51,15 +60,16 @@ npx tsx src/index.ts ABC123 --svg
 ## CLI
 
 ```
-jamaid <input> [options]
+jamaid [input] [options]
 
 Arguments:
-  input                    FigJam URL or file key
+  input                    FigJam URL/file key or JSON file path (depends on --source)
 
 Options:
   -o, --output <path>      Write output to file (overrides default filename)
   --token <token>          Figma API token (overrides FIGMA_API_TOKEN)
-  --source <mode>          Source mode: rest, mcp, auto (default: rest)
+  --source <mode>          Source mode: rest, mcp, auto, file, stdin (default: rest)
+  --format <format>        JSON format for --source file|stdin: rest, mcp, auto (default: auto)
   --page <name-or-index>   Export only one page by name or 1-based index
   -d, --direction <dir>    Override direction: TD, LR, TB, BT, RL
   --markdown               Output as Markdown (.md) with fenced mermaid code block
@@ -86,8 +96,19 @@ Use `-o custom.ext` only when exporting a single page (`--page ...`).
 - `--source rest`: Use Figma REST API ingestion (default).
 - `--source mcp`: Use MCP HTTP transport ingestion.
 - `--source auto`: Try MCP first; on MCP unavailability, network `TypeError`, timeout, or 5xx endpoint errors, fallback to REST automatically.
+- `--source file`: Read JSON payload from file path in `<input>`.
+- `--source stdin`: Read JSON payload from stdin (positional `<input>` is optional and ignored if provided).
 
 If `--source` is omitted, jamaid behaves exactly like prior versions and uses REST only.
+
+For `--source file|stdin`, use `--format` to choose the payload contract:
+
+- `--format rest`: Validate payload as Figma REST `/files` JSON shape (`document` root).
+- `--format mcp`: Validate payload as MCP diagram payload (`pages[].diagram`).
+- `--format auto` (default): Auto-detect payload shape:
+  - REST when payload has `document` object and Figma-like node structure (`document.id`, `document.type`).
+  - MCP when payload has `pages[]` with diagram arrays (`nodes`, `edges`, `sections`, `stickyNotes`).
+  - otherwise returns an actionable error instructing `--format rest|mcp`.
 
 ### MCP Configuration
 
@@ -134,6 +155,9 @@ npm i -g @mermaid-js/mermaid-cli
 
 ### Token Lookup
 
+Token resolution applies only to `--source rest|mcp|auto`.  
+`--source file|stdin` does not require a Figma token.
+
 Precedence:
 
 1. `--token` flag
@@ -159,6 +183,7 @@ jamaid/
 │   ├── figma.ts      # Figma API client
 │   ├── pipeline.ts   # ingest/normalize/transform/render pipeline
 │   ├── normalizer.ts # source payload -> canonical graph document
+│   ├── cli-options.ts # CLI source/format parsing + validation
 │   ├── parser.ts     # Figma JSON → intermediate representation
 │   ├── mermaid.ts    # Intermediate repr → Mermaid syntax
 │   ├── types.ts      # TypeScript + canonical graph types
@@ -167,13 +192,18 @@ jamaid/
 │       ├── mcp-http-client.ts
 │       ├── figma-rest-source.ts
 │       ├── figma-mcp-source.ts
+│       ├── file-json-source.ts
+│       ├── stdin-json-source.ts
+│       ├── json-payload.ts
 │       └── select-source.ts
 ├── tests/
 │   ├── parser.test.ts
 │   ├── mermaid.test.ts
 │   ├── source-selection.test.ts
 │   ├── figma-mcp-source.test.ts
-│   └── normalizer-mcp.test.ts
+│   ├── normalizer-mcp.test.ts
+│   ├── cli-options.test.ts
+│   └── json-input-sources.test.ts
 ├── .env.example
 ├── package.json
 ├── tsconfig.json

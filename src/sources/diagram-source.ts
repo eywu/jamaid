@@ -1,8 +1,13 @@
-import type { DiagramSourceKind, FigmaFileResponse } from "../types.js";
+import type {
+  DiagramInputFormat,
+  DiagramInputSourceKind,
+  FigmaFileResponse,
+} from "../types.js";
 
 export interface DiagramSourceRequest {
   input: string;
   token: string;
+  format?: DiagramInputFormat;
 }
 
 export interface RestIngestedDiagramDocument {
@@ -67,6 +72,6 @@ export type IngestedDiagramDocument =
   | McpIngestedDiagramDocument;
 
 export interface DiagramSource {
-  readonly kind: DiagramSourceKind;
+  readonly kind: DiagramInputSourceKind;
   ingest(request: DiagramSourceRequest): Promise<IngestedDiagramDocument>;
 }
