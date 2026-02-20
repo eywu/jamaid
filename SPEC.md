@@ -8,21 +8,21 @@ CLI tool that converts FigJam flow diagrams to Mermaid diagram markdown using th
 - Figma API token (via `FIGMA_API_TOKEN` env var or `--token` flag)
 
 ## Output
-- A `.mermaid` file containing valid Mermaid flowchart syntax
+- A `.mmd` file containing valid Mermaid flowchart syntax
 
 ## CLI Interface
 ```bash
 # Basic usage
-jamaid https://www.figma.com/board/ABC123/My-Board -o output.mermaid
+jamaid https://www.figma.com/board/ABC123/My-Board -o output.mmd
 
 # With file key directly
-jamaid ABC123 -o output.mermaid
+jamaid ABC123 -o output.mmd
 
 # With token flag
-jamaid ABC123 --token figd_xxx -o output.mermaid
+jamaid ABC123 --token figd_xxx -o output.mmd
 
 # Default output: stdout (so you can pipe)
-jamaid ABC123 > flow.mermaid
+jamaid ABC123 > flow.mmd
 ```
 
 ## Architecture

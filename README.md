@@ -17,10 +17,10 @@ npm install
 
 ```bash
 # Run directly with tsx
-npx tsx src/index.ts https://www.figma.com/board/ABC123/My-Board -o output.mermaid
+npx tsx src/index.ts https://www.figma.com/board/ABC123/My-Board -o output.mmd
 
 # Or with a raw file key
-npx tsx src/index.ts ABC123 --token figd_xxx > flow.mermaid
+npx tsx src/index.ts ABC123 --token figd_xxx > flow.mmd
 ```
 
 ## CLI
