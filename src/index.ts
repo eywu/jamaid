@@ -5,16 +5,26 @@ import dotenv from "dotenv";
 import { readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { extractFileKey, fetchFigmaFile } from "./figma.js";
 import { toMermaid } from "./mermaid.js";
 import { parseFigmaFile } from "./parser.js";
 import type { MermaidDirection } from "./types.js";
 
+const execFileAsync = promisify(execFile);
+
 type CliOptions = {
   output?: string;
   token?: string;
   direction?: MermaidDirection;
+  markdown?: boolean;
+  png?: boolean;
 };
+
+function sanitizeFilename(name: string): string {
+  return name.replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").toLowerCase() || "output";
+}
 
 const VALID_DIRECTIONS = new Set<MermaidDirection>(["TD", "LR", "TB", "BT", "RL"]);
 
@@ -71,12 +81,48 @@ program
     "Mermaid flow direction override (TD, LR, TB, BT, RL)",
     parseDirection,
   )
+  .option("--markdown", "Output as Markdown with fenced mermaid code block (<filename>.md)")
+  .option("--png", "Output as PNG image (<filename>.png, requires mmdc/mermaid-cli)")
   .action(async (input: string, options: CliOptions) => {
     const fileKey = extractFileKey(input);
     const token = await resolveToken(options.token);
     const figmaFile = await fetchFigmaFile(fileKey, token);
     const diagram = parseFigmaFile(figmaFile);
     const mermaid = toMermaid(diagram, { direction: options.direction });
+
+    const baseName = sanitizeFilename(figmaFile.name ?? fileKey);
+
+    if (options.markdown) {
+      const mdContent = `\`\`\`mermaid\n${mermaid}\n\`\`\`\n`;
+      const mdPath = options.output ?? `${baseName}.md`;
+      await writeFile(mdPath, mdContent, "utf8");
+      process.stderr.write(`Written to ${mdPath}\n`);
+      return;
+    }
+
+    if (options.png) {
+      const pngPath = options.output ?? `${baseName}.png`;
+      const tmpMmd = join(
+        (await import("node:os")).tmpdir(),
+        `jamaid-${Date.now()}.mmd`,
+      );
+      await writeFile(tmpMmd, `${mermaid}\n`, "utf8");
+      try {
+        await execFileAsync("mmdc", ["-i", tmpMmd, "-o", pngPath, "-b", "transparent"]);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("ENOENT")) {
+          throw new Error(
+            "mmdc (mermaid-cli) not found. Install it with: npm i -g @mermaid-js/mermaid-cli",
+          );
+        }
+        throw new Error(`PNG rendering failed: ${msg}`);
+      } finally {
+        await import("node:fs/promises").then((fs) => fs.unlink(tmpMmd).catch(() => {}));
+      }
+      process.stderr.write(`Written to ${pngPath}\n`);
+      return;
+    }
 
     if (options.output) {
       await writeFile(options.output, `${mermaid}\n`, "utf8");
