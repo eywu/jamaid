@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1 - 2026-02-20
+
+### Added
+- Enhanced 429 error output from Figma API requests to include useful rate-limit headers:
+  - `retry-after`
+  - `x-figma-rate-limit-type`
+  - `x-figma-plan-tier`
+- Added unit tests for 429 header reporting and non-429 error behavior in `fetchFigmaFile`.
+
 ## 0.3.0 - 2026-02-20
 
 ### Added
