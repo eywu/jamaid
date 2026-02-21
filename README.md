@@ -96,8 +96,8 @@ Use `-o custom.ext` only when exporting a single page (`--page ...`).
 - `--source rest`: Use Figma REST API ingestion (default).
 - `--source mcp`: Use MCP HTTP transport ingestion.
 - `--source auto`: Try MCP first; on MCP unavailability, network `TypeError`, timeout, or 5xx endpoint errors, fallback to REST automatically.
-- `--source file`: Read payload (JSON or MCP XML) from file path in `<input>`.
-- `--source stdin`: Read payload (JSON or MCP XML) from stdin (positional `<input>` is optional and ignored if provided).
+- `--source file`: Read payload from file path in `<input>` (REST JSON or MCP XML).
+- `--source stdin`: Read payload from stdin (REST JSON or MCP XML; positional `<input>` is optional and ignored if provided).
 
 If `--source` is omitted, jamaid behaves exactly like prior versions and uses REST only.
 
@@ -109,6 +109,15 @@ For `--source file|stdin`, use `--format` to choose the payload contract:
   - MCP XML when payload starts with `<`.
   - REST JSON when payload has `document` object and Figma-like node structure (`document.id`, `document.type`).
   - otherwise returns an actionable error instructing `--format rest|mcp`.
+
+### Which Source Should I Use?
+
+- **Use `--source rest` when you have a Figma Professional plan with Dev Mode access.**
+  - Figma REST is generally the simplest integration, but can be heavily throttled without the right plan/features.
+- **Use `--source mcp` when connecting jamaid into AI workflows that don't natively support MCP connections.**
+  - jamaid can call an MCP endpoint and convert the XML result into Mermaid output.
+- **Use `--source file --format mcp` (or `--source stdin --format mcp`) when you already captured MCP XML output** from tools like Claude Code/Cowork and want to convert it offline.
+  - This is useful for Claude skills/scripts where you want to avoid passing a Figma API token directly into jamaid.
 
 ### MCP Configuration
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.1 - 2026-02-20
+
+### Docs
+- Added a new "Which Source Should I Use?" section in README with practical guidance for:
+  - REST usage with Professional + Dev Mode context,
+  - MCP endpoint usage for AI systems without native MCP support,
+  - file/stdin XML workflows for Claude Code/Cowork skill/script pipelines.
+
 ## 0.5.0 - 2026-02-20
 
 ### Breaking Changes
