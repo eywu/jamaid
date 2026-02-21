@@ -3,14 +3,14 @@ import type {
   DiagramSourceRequest,
   IngestedDiagramDocument,
 } from "./diagram-source.js";
-import { ingestJsonPayload, parseJsonText } from "./json-payload.js";
+import { ingestJsonPayload, parsePayloadText } from "./json-payload.js";
 
 export type ReadStdin = () => Promise<string>;
 
 function readProcessStdin(): Promise<string> {
   if (process.stdin.isTTY) {
     throw new Error(
-      "No stdin input detected. Pipe JSON into stdin when using --source stdin.",
+      "No stdin input detected. Pipe JSON or XML into stdin when using --source stdin.",
     );
   }
 
@@ -32,7 +32,7 @@ export class StdinJsonSource implements DiagramSource {
 
   public async ingest(request: DiagramSourceRequest): Promise<IngestedDiagramDocument> {
     const raw = await this.readStdin();
-    const payload = parseJsonText(raw, "stdin");
+    const payload = parsePayloadText(raw, "stdin", request.format ?? "auto");
     return ingestJsonPayload(payload, {
       fileKey: "stdin",
       format: request.format,

@@ -31,10 +31,13 @@ npx tsx src/index.ts ABC123 --source mcp
 # JSON file source (REST payload)
 npx tsx src/index.ts ./diagram-rest.json --source file --format rest
 
-# JSON file source (MCP payload; auto-detect format)
+# File source (MCP JSON payload; auto-detect format)
 npx tsx src/index.ts ./diagram-mcp.json --source file --format auto
 
-# stdin source (input argument optional in stdin mode)
+# File source (MCP XML payload)
+npx tsx src/index.ts ./diagram-mcp.xml --source file --format mcp
+
+# stdin source (input argument optional in stdin mode; supports JSON or MCP XML)
 cat ./diagram.json | npx tsx src/index.ts --source stdin --format auto
 
 # Multi-page files auto-export one output per page
@@ -69,7 +72,7 @@ Options:
   -o, --output <path>      Write output to file (overrides default filename)
   --token <token>          Figma API token (overrides FIGMA_API_TOKEN)
   --source <mode>          Source mode: rest, mcp, auto, file, stdin (default: rest)
-  --format <format>        JSON format for --source file|stdin: rest, mcp, auto (default: auto)
+  --format <format>        Input format for --source file|stdin: rest, mcp, auto (default: auto)
   --page <name-or-index>   Export only one page by name or 1-based index
   -d, --direction <dir>    Override direction: TD, LR, TB, BT, RL
   --markdown               Output as Markdown (.md) with fenced mermaid code block
@@ -96,18 +99,19 @@ Use `-o custom.ext` only when exporting a single page (`--page ...`).
 - `--source rest`: Use Figma REST API ingestion (default).
 - `--source mcp`: Use MCP HTTP transport ingestion.
 - `--source auto`: Try MCP first; on MCP unavailability, network `TypeError`, timeout, or 5xx endpoint errors, fallback to REST automatically.
-- `--source file`: Read JSON payload from file path in `<input>`.
-- `--source stdin`: Read JSON payload from stdin (positional `<input>` is optional and ignored if provided).
+- `--source file`: Read payload (JSON or MCP XML) from file path in `<input>`.
+- `--source stdin`: Read payload (JSON or MCP XML) from stdin (positional `<input>` is optional and ignored if provided).
 
 If `--source` is omitted, jamaid behaves exactly like prior versions and uses REST only.
 
 For `--source file|stdin`, use `--format` to choose the payload contract:
 
 - `--format rest`: Validate payload as Figma REST `/files` JSON shape (`document` root).
-- `--format mcp`: Validate payload as MCP diagram payload (`pages[].diagram`).
+- `--format mcp`: Validate payload as MCP payload (JSON `pages[].diagram` or XML `get_figjam`).
 - `--format auto` (default): Auto-detect payload shape:
-  - REST when payload has `document` object and Figma-like node structure (`document.id`, `document.type`).
-  - MCP when payload has `pages[]` with diagram arrays (`nodes`, `edges`, `sections`, `stickyNotes`).
+  - MCP XML when payload starts with `<`.
+  - REST JSON when payload has `document` object and Figma-like node structure (`document.id`, `document.type`).
+  - MCP JSON when payload has `pages[]` with diagram arrays (`nodes`, `edges`, `sections`, `stickyNotes`).
   - otherwise returns an actionable error instructing `--format rest|mcp`.
 
 ### MCP Configuration

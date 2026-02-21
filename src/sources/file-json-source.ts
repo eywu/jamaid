@@ -5,7 +5,7 @@ import type {
   DiagramSourceRequest,
   IngestedDiagramDocument,
 } from "./diagram-source.js";
-import { ingestJsonPayload, parseJsonText } from "./json-payload.js";
+import { ingestJsonPayload, parsePayloadText } from "./json-payload.js";
 
 function inferFileKey(pathValue: string): string {
   const trimmed = pathValue.trim();
@@ -26,7 +26,7 @@ export class FileJsonSource implements DiagramSource {
   public async ingest(request: DiagramSourceRequest): Promise<IngestedDiagramDocument> {
     const inputPath = request.input.trim();
     if (!inputPath) {
-      throw new Error("Missing JSON file path. Provide <input> when using --source file.");
+      throw new Error("Missing input file path. Provide <input> when using --source file.");
     }
 
     let raw: string;
@@ -37,7 +37,7 @@ export class FileJsonSource implements DiagramSource {
       throw new Error(`Failed to read JSON file "${inputPath}": ${detail}`);
     }
 
-    const payload = parseJsonText(raw, `file "${inputPath}"`);
+    const payload = parsePayloadText(raw, `file "${inputPath}"`, request.format ?? "auto");
     return ingestJsonPayload(payload, {
       fileKey: inferFileKey(inputPath),
       format: request.format,

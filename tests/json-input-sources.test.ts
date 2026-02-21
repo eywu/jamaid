@@ -27,7 +27,13 @@ async function writeTempJson(payload: unknown): Promise<{ dir: string; filePath:
   return { dir, filePath };
 }
 
-describe("file/stdin JSON sources", () => {
+const SAMPLE_MCP_XML = `<canvas id="0:1" name="Unified" x="0" y="0" width="0" height="0">
+  <shape-with-text id="1:2" x="-192" y="-112" width="176" height="176" name="SQUARE">AEO Visibility</shape-with-text>
+  <shape-with-text id="1:12" x="64" y="-112" width="176" height="176" name="SQUARE">SERP Health</shape-with-text>
+  <connector id="1:64" x="-104" y="72.5" connectorStart="1:2" connectorStartCap="NONE" connectorEnd="1:12" connectorEndCap="ARROW_LINES">Track</connector>
+</canvas>`;
+
+describe("file/stdin structured sources", () => {
   it("ingests REST payload from --source file", async () => {
     const restPayload = await loadRestFixture();
     const { dir, filePath } = await writeTempJson(restPayload);
@@ -66,6 +72,49 @@ describe("file/stdin JSON sources", () => {
         throw new Error("Expected MCP ingested payload.");
       }
       expect(ingested.document.pages[0]?.pageName).toBe(mcpPayload.pages[0]?.pageName);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("ingests MCP XML payload from --source file with --format mcp", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "jamaid-xml-"));
+    const filePath = join(dir, "payload.xml");
+    await writeFile(filePath, SAMPLE_MCP_XML, "utf8");
+
+    try {
+      const source = new FileJsonSource();
+      const ingested = await source.ingest({
+        input: filePath,
+        token: "",
+        format: "mcp",
+      });
+
+      expect(ingested.sourceKind).toBe("mcp");
+      if (ingested.sourceKind !== "mcp") {
+        throw new Error("Expected MCP ingested payload.");
+      }
+      expect(ingested.document.pages[0]?.pageName).toBe("Unified");
+      expect(ingested.document.pages[0]?.diagram.nodes).toHaveLength(2);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("auto-detects MCP XML payload format for --source file", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "jamaid-xml-"));
+    const filePath = join(dir, "payload.xml");
+    await writeFile(filePath, SAMPLE_MCP_XML, "utf8");
+
+    try {
+      const source = new FileJsonSource();
+      const ingested = await source.ingest({
+        input: filePath,
+        token: "",
+        format: "auto",
+      });
+
+      expect(ingested.sourceKind).toBe("mcp");
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -120,6 +169,22 @@ describe("file/stdin JSON sources", () => {
       throw new Error("Expected MCP ingested payload.");
     }
     expect(ingested.document.pages[0]?.pageId).toBe(mcpPayload.pages[0]?.pageId);
+  });
+
+  it("ingests MCP XML payload from --source stdin", async () => {
+    const source = new StdinJsonSource(async () => SAMPLE_MCP_XML);
+
+    const ingested = await source.ingest({
+      input: "",
+      token: "",
+      format: "mcp",
+    });
+
+    expect(ingested.sourceKind).toBe("mcp");
+    if (ingested.sourceKind !== "mcp") {
+      throw new Error("Expected MCP ingested payload.");
+    }
+    expect(ingested.document.pages[0]?.pageName).toBe("Unified");
   });
 
   it("auto-detects MCP payload format for --source stdin", async () => {

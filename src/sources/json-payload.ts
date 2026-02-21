@@ -15,6 +15,7 @@ import type {
   McpDiagramStickyNotePayload,
   McpPagePayload,
 } from "./diagram-source.js";
+import { parseMcpXmlPayload } from "./mcp-xml.js";
 
 const VALID_EDGE_KINDS = new Set<McpDiagramEdgePayload["kind"]>([
   "arrow",
@@ -328,9 +329,27 @@ export function resolveJsonPayloadFormat(
   );
 }
 
-export function parseJsonText(raw: string, sourceLabel: string): unknown {
-  if (!raw.trim()) {
-    throw new Error(`No JSON input received from ${sourceLabel}.`);
+export function parsePayloadText(
+  raw: string,
+  sourceLabel: string,
+  format: DiagramInputFormat = "auto",
+): unknown {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    throw new Error(`No input received from ${sourceLabel}.`);
+  }
+
+  const looksLikeXml = trimmed.startsWith("<");
+  if (looksLikeXml) {
+    if (format === "rest") {
+      throw new Error(`Invalid REST payload from ${sourceLabel}: XML is not supported for --format rest.`);
+    }
+    try {
+      return parseMcpXmlPayload(raw);
+    } catch (error: unknown) {
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(`Invalid XML from ${sourceLabel}: ${detail}`);
+    }
   }
 
   try {

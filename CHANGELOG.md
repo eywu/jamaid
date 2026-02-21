@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.3 - 2026-02-20
+
+### Added
+- `--source file|stdin` now supports MCP XML input in addition to JSON.
+- `--format mcp` accepts either MCP JSON payloads or MCP XML (`get_figjam`) payloads.
+
+### Changed
+- `--format auto` now detects MCP XML when the input starts with `<`.
+- Improved file/stdin parse errors for invalid JSON/XML and format mismatches.
+
 ## 0.4.2 - 2026-02-20
 
 ### Added
