@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0 - 2026-02-20
+
+### Breaking Changes
+- Removed MCP JSON payload compatibility.
+- MCP ingestion now requires XML (`get_figjam`) for:
+  - `--source mcp`
+  - `--source file|stdin --format mcp`
+
+### Changed
+- `--format auto` now resolves only:
+  - MCP XML (input starts with `<`)
+  - REST JSON (`document` root)
+- Non-XML MCP responses now fail with clear actionable errors.
+
 ## 0.4.3 - 2026-02-20
 
 ### Added

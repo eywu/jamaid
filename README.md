@@ -31,9 +31,6 @@ npx tsx src/index.ts ABC123 --source mcp
 # JSON file source (REST payload)
 npx tsx src/index.ts ./diagram-rest.json --source file --format rest
 
-# File source (MCP JSON payload; auto-detect format)
-npx tsx src/index.ts ./diagram-mcp.json --source file --format auto
-
 # File source (MCP XML payload)
 npx tsx src/index.ts ./diagram-mcp.xml --source file --format mcp
 
@@ -107,47 +104,23 @@ If `--source` is omitted, jamaid behaves exactly like prior versions and uses RE
 For `--source file|stdin`, use `--format` to choose the payload contract:
 
 - `--format rest`: Validate payload as Figma REST `/files` JSON shape (`document` root).
-- `--format mcp`: Validate payload as MCP payload (JSON `pages[].diagram` or XML `get_figjam`).
+- `--format mcp`: Validate payload as MCP XML (`get_figjam`).
 - `--format auto` (default): Auto-detect payload shape:
   - MCP XML when payload starts with `<`.
   - REST JSON when payload has `document` object and Figma-like node structure (`document.id`, `document.type`).
-  - MCP JSON when payload has `pages[]` with diagram arrays (`nodes`, `edges`, `sections`, `stickyNotes`).
   - otherwise returns an actionable error instructing `--format rest|mcp`.
 
 ### MCP Configuration
 
 Set these env vars to enable `--source mcp` (or `--source auto` MCP-first behavior):
 
-- `JAMAID_MCP_ENDPOINT_URL` (required): HTTP endpoint that returns MCP data payload (XML from `get_figjam`, or JSON).
+- `JAMAID_MCP_ENDPOINT_URL` (required): HTTP endpoint that returns MCP XML payload from `get_figjam`.
 - `JAMAID_MCP_AUTH_TOKEN` (optional): bearer token sent as `Authorization: Bearer <token>`.
 - `JAMAID_MCP_TIMEOUT_MS` (optional): request timeout in milliseconds (default: `10000`).
 
 If `JAMAID_MCP_ENDPOINT_URL` is not set, `--source mcp` fails with an actionable error and `--source auto` falls back to REST.
 
-MCP response payload contract (jamaid accepts either):
-
-1) XML response from `get_figjam` (primary)
-2) JSON diagram payload (legacy/compat)
-
-JSON contract (minimal shape):
-
-```json
-{
-  "fileName": "Optional file name",
-  "pages": [
-    {
-      "pageId": "page-1",
-      "pageName": "Main Flow",
-      "diagram": {
-        "nodes": [{ "sourceId": "n1", "label": "Start" }],
-        "edges": [{ "sourceId": "n1", "targetId": "n2", "kind": "arrow" }],
-        "sections": [{ "sourceId": "s1", "label": "Core", "nodeIds": ["n1"] }],
-        "stickyNotes": [{ "sourceId": "st1", "text": "Optional note" }]
-      }
-    }
-  ]
-}
-```
+MCP response payload contract: XML response from `get_figjam`.
 
 ### Multi-page behavior
 

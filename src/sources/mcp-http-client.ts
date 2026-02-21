@@ -119,19 +119,15 @@ export class McpHttpClient implements McpTransport {
       const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
       const trimmed = responseText.trim();
 
-      if (contentType.includes("xml") || trimmed.startsWith("<")) {
-        try {
-          return parseMcpXmlPayload(responseText);
-        } catch (error: unknown) {
-          const detail = error instanceof Error ? error.message : String(error);
-          throw new Error(`MCP endpoint returned invalid XML: ${detail}`);
-        }
+      if (!contentType.includes("xml") && !trimmed.startsWith("<")) {
+        throw new Error("MCP endpoint returned non-XML payload. get_figjam responses must be XML.");
       }
 
       try {
-        return JSON.parse(responseText) as McpDiagramPayload;
-      } catch {
-        throw new Error("MCP endpoint returned invalid JSON/XML payload.");
+        return parseMcpXmlPayload(responseText);
+      } catch (error: unknown) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(`MCP endpoint returned invalid XML: ${detail}`);
       }
     } catch (error: unknown) {
       if (isAbortError(error)) {

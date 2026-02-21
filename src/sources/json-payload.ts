@@ -17,6 +17,8 @@ import type {
 } from "./diagram-source.js";
 import { parseMcpXmlPayload } from "./mcp-xml.js";
 
+const XML_PAYLOAD_MARKER = "__jamaid_mcp_xml";
+
 const VALID_EDGE_KINDS = new Set<McpDiagramEdgePayload["kind"]>([
   "arrow",
   "line",
@@ -283,31 +285,6 @@ export function looksLikeRestPayload(value: unknown): boolean {
   return typeof document.id === "string" && typeof document.type === "string";
 }
 
-export function looksLikeMcpPayload(value: unknown): boolean {
-  if (!isRecord(value) || !Array.isArray(value.pages)) {
-    return false;
-  }
-
-  if (value.pages.length === 0) {
-    return true;
-  }
-
-  const firstPage = value.pages[0];
-  if (!isRecord(firstPage) || !isRecord(firstPage.diagram)) {
-    return false;
-  }
-
-  const diagram = firstPage.diagram;
-  return (
-    typeof firstPage.pageId === "string" &&
-    typeof firstPage.pageName === "string" &&
-    Array.isArray(diagram.nodes) &&
-    Array.isArray(diagram.edges) &&
-    Array.isArray(diagram.sections) &&
-    Array.isArray(diagram.stickyNotes)
-  );
-}
-
 export function resolveJsonPayloadFormat(
   payload: unknown,
   requestedFormat: DiagramInputFormat,
@@ -320,12 +297,8 @@ export function resolveJsonPayloadFormat(
     return "rest";
   }
 
-  if (looksLikeMcpPayload(payload)) {
-    return "mcp";
-  }
-
   throw new Error(
-    "Unable to auto-detect JSON payload format. Expected REST payload with `document` object or MCP payload with `pages[].diagram` arrays. Pass --format rest or --format mcp.",
+    "Unable to auto-detect JSON payload format. Expected REST payload with `document` object. For MCP, provide XML (`get_figjam`) and use --format mcp or --format auto.",
   );
 }
 
@@ -345,19 +318,28 @@ export function parsePayloadText(
       throw new Error(`Invalid REST payload from ${sourceLabel}: XML is not supported for --format rest.`);
     }
     try {
-      return parseMcpXmlPayload(raw);
+      const parsed = parseMcpXmlPayload(raw) as McpDiagramPayload & { [XML_PAYLOAD_MARKER]?: true };
+      parsed[XML_PAYLOAD_MARKER] = true;
+      return parsed;
     } catch (error: unknown) {
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(`Invalid XML from ${sourceLabel}: ${detail}`);
     }
   }
 
+  let parsedJson: unknown;
   try {
-    return JSON.parse(raw) as unknown;
+    parsedJson = JSON.parse(raw) as unknown;
   } catch (error: unknown) {
     const detail = error instanceof Error ? error.message : String(error);
     throw new Error(`Invalid JSON from ${sourceLabel}: ${detail}`);
   }
+
+  if (format === "mcp") {
+    throw new Error(`Invalid MCP payload from ${sourceLabel}: MCP input must be XML (get_figjam), not JSON.`);
+  }
+
+  return parsedJson;
 }
 
 export interface IngestJsonPayloadOptions {
@@ -369,7 +351,11 @@ export function ingestJsonPayload(
   payload: unknown,
   options: IngestJsonPayloadOptions,
 ): IngestedDiagramDocument {
-  const format = resolveJsonPayloadFormat(payload, options.format ?? "auto");
+  const hasXmlMarker =
+    isRecord(payload) && (payload as Record<string, unknown>)[XML_PAYLOAD_MARKER] === true;
+  const format = hasXmlMarker
+    ? "mcp"
+    : resolveJsonPayloadFormat(payload, options.format ?? "auto");
   if (format === "rest") {
     return {
       sourceKind: "rest",
