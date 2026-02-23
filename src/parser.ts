@@ -78,11 +78,21 @@ function parseShapeNode(node: FigmaNode, sectionId?: string): ParsedNode {
 }
 
 function parseConnectorNode(node: FigmaNode): ParsedEdge | null {
-  const sourceId = node.connectorStart?.endpointNodeId;
-  const targetId = node.connectorEnd?.endpointNodeId;
+  let sourceId = node.connectorStart?.endpointNodeId;
+  let targetId = node.connectorEnd?.endpointNodeId;
 
   if (!sourceId || !targetId) {
     return null;
+  }
+
+  const hasArrowStart = isArrowCap(node.connectorStartStrokeCap);
+  const hasArrowEnd = isArrowCap(node.connectorEndStrokeCap);
+
+  // When only the start cap has an arrow, the arrowhead points AT the start
+  // node, meaning the visual flow is end → start. Swap so source → target
+  // follows the arrow direction.
+  if (hasArrowStart && !hasArrowEnd) {
+    [sourceId, targetId] = [targetId, sourceId];
   }
 
   const label = firstTextFromNode(node);
