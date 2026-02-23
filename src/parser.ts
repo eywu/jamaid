@@ -10,7 +10,18 @@ import type {
   ParsedStickyNote,
 } from "./types.js";
 
-const ARROW_CAPS = new Set(["ARROW_LINES", "ARROW_EQUILATERAL"]);
+// REST API caps: LINE_ARROW, TRIANGLE_ARROW, TRIANGLE_FILLED, DIAMOND_FILLED, CIRCLE_FILLED
+// Plugin API caps: ARROW_LINES, ARROW_EQUILATERAL
+// We accept both so the parser works with REST and MCP/plugin sources.
+const ARROW_CAPS = new Set([
+  "LINE_ARROW",
+  "TRIANGLE_ARROW",
+  "TRIANGLE_FILLED",
+  "DIAMOND_FILLED",
+  "CIRCLE_FILLED",
+  "ARROW_LINES",
+  "ARROW_EQUILATERAL",
+]);
 
 function cleanText(value: string | undefined): string {
   if (!value) {
