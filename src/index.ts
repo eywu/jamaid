@@ -13,6 +13,12 @@ import {
   parseSourceMode,
   resolveCliIngestOptions,
 } from "./cli-options.js";
+import type {
+  GenerateNeonHtmlOptions,
+  NeonBallSize,
+  NeonColorMode,
+  NeonTheme,
+} from "./neon-html.js";
 import { runDiagramPipeline, type RenderedPageDiagram } from "./pipeline.js";
 import type {
   DiagramInputFormat,
@@ -33,6 +39,9 @@ type CliOptions = {
   svg?: boolean;
   html?: boolean;
   page?: string;
+  ballSize?: NeonBallSize;
+  theme?: NeonTheme;
+  colorMode?: NeonColorMode;
 };
 
 function sanitizeFilename(name: string): string {
@@ -56,11 +65,38 @@ async function renderWithMmdc(mermaid: string, outPath: string, format: "png" | 
 }
 
 const VALID_DIRECTIONS = new Set<MermaidDirection>(["TD", "LR", "TB", "BT", "RL"]);
+const VALID_BALL_SIZES = new Set<NeonBallSize>(["small", "medium", "large"]);
+const VALID_THEMES = new Set<NeonTheme>(["neon", "pastel", "ocean", "sunset"]);
+const VALID_COLOR_MODES = new Set<NeonColorMode>(["cluster", "random"]);
 
 function parseDirection(value: string): MermaidDirection {
   const normalized = value.trim().toUpperCase() as MermaidDirection;
   if (!VALID_DIRECTIONS.has(normalized)) {
     throw new InvalidArgumentError("Direction must be one of: TD, LR, TB, BT, RL.");
+  }
+  return normalized;
+}
+
+function parseBallSize(value: string): NeonBallSize {
+  const normalized = value.trim().toLowerCase() as NeonBallSize;
+  if (!VALID_BALL_SIZES.has(normalized)) {
+    throw new InvalidArgumentError("Ball size must be one of: small, medium, large.");
+  }
+  return normalized;
+}
+
+function parseTheme(value: string): NeonTheme {
+  const normalized = value.trim().toLowerCase() as NeonTheme;
+  if (!VALID_THEMES.has(normalized)) {
+    throw new InvalidArgumentError("Theme must be one of: neon, pastel, ocean, sunset.");
+  }
+  return normalized;
+}
+
+function parseColorMode(value: string): NeonColorMode {
+  const normalized = value.trim().toLowerCase() as NeonColorMode;
+  if (!VALID_COLOR_MODES.has(normalized)) {
+    throw new InvalidArgumentError("Color mode must be one of: cluster, random.");
   }
   return normalized;
 }
@@ -149,7 +185,13 @@ async function renderSvgString(mermaid: string): Promise<string> {
   }
 }
 
-async function writeDiagramOutput(mermaid: string, outPath: string, options: CliOptions, pageTitle?: string) {
+async function writeDiagramOutput(
+  mermaid: string,
+  outPath: string,
+  options: CliOptions,
+  pageTitle?: string,
+  htmlOptions: Pick<GenerateNeonHtmlOptions, "ballSize" | "theme" | "colorMode"> = {},
+) {
   if (options.png) {
     await renderWithMmdc(mermaid, outPath, "png");
     return;
@@ -161,7 +203,11 @@ async function writeDiagramOutput(mermaid: string, outPath: string, options: Cli
   if (options.html) {
     const { generateNeonHtml } = await import("./neon-html.js");
     const svgString = await renderSvgString(mermaid);
-    await writeFile(outPath, generateNeonHtml(svgString, pageTitle), "utf8");
+    await writeFile(
+      outPath,
+      generateNeonHtml(svgString, { title: pageTitle, ...htmlOptions }),
+      "utf8",
+    );
     return;
   }
 
@@ -198,6 +244,24 @@ program
   .option("--png", "Output as PNG image (<filename>.png, requires mmdc/mermaid-cli)")
   .option("--svg", "Output as SVG image (<filename>.svg, requires mmdc/mermaid-cli)")
   .option("--html", "Output as animated neon-themed HTML (<filename>.html, requires mmdc)")
+  .option(
+    "--ball-size <size>",
+    "HTML ball size: small, medium, large",
+    parseBallSize,
+    "medium",
+  )
+  .option(
+    "--theme <theme>",
+    "HTML theme: neon, pastel, ocean, sunset",
+    parseTheme,
+    "neon",
+  )
+  .option(
+    "--color-mode <mode>",
+    "HTML color mode: cluster, random",
+    parseColorMode,
+    "cluster",
+  )
   .action(async (input: string | undefined, options: CliOptions) => {
     const formatFlags = [options.markdown, options.png, options.svg, options.html].filter(Boolean).length;
     if (formatFlags > 1) {
@@ -226,6 +290,11 @@ program
     }
 
     const fileBaseName = sanitizeFilename(pipeline.fileName ?? pipeline.fileKey);
+    const htmlOptions: Pick<GenerateNeonHtmlOptions, "ballSize" | "theme" | "colorMode"> = {
+      ballSize: options.ballSize,
+      theme: options.theme,
+      colorMode: options.colorMode,
+    };
 
     if (pages.length === 1) {
       const [page] = pages;
@@ -242,7 +311,7 @@ program
 
       const defaultName = `${fileBaseName}-${sanitizeFilename(page.pageName)}${extensionFor(options)}`;
       const outPath = options.output ?? defaultName;
-      await writeDiagramOutput(mermaid, outPath, options, page.pageName);
+      await writeDiagramOutput(mermaid, outPath, options, page.pageName, htmlOptions);
       process.stderr.write(`Written to ${outPath}\n`);
       return;
     }
@@ -254,7 +323,7 @@ program
     for (const page of pages) {
       const mermaid = page.mermaid;
       const outPath = `${fileBaseName}-${sanitizeFilename(page.pageName)}${extensionFor(options)}`;
-      await writeDiagramOutput(mermaid, outPath, options, page.pageName);
+      await writeDiagramOutput(mermaid, outPath, options, page.pageName, htmlOptions);
       process.stderr.write(`Written to ${outPath}\n`);
     }
   });
