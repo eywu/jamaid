@@ -1,6 +1,6 @@
 {
   "name": "jamaid",
-  "version": "0.8.0",
+  "version": "0.7.2",
   "description": "Convert FigJam flow diagrams into Mermaid markdown",
   "type": "module",
   "bin": {
