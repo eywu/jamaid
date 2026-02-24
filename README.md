@@ -42,14 +42,8 @@ npx tsx src/index.ts ABC123 --source auto
 # MCP source mode (requires MCP endpoint env var)
 npx tsx src/index.ts ABC123 --source mcp
 
-# JSON file source (REST payload)
-npx tsx src/index.ts ./diagram-rest.json --source file --format rest
-
 # File source (MCP XML payload)
 npx tsx src/index.ts ./diagram-mcp.xml --source file --format mcp
-
-# stdin source (input argument optional in stdin mode; supports JSON or MCP XML)
-cat ./diagram.json | npx tsx src/index.ts --source stdin --format auto
 
 # Multi-page files auto-export one output per page
 npx tsx src/index.ts https://www.figma.com/board/ABC123/My-Board
@@ -70,7 +64,7 @@ npx tsx src/index.ts ABC123 --png
 npx tsx src/index.ts ABC123 --svg
 
 # Render as animated neon-themed HTML (requires mermaid-cli)
-npx tsx src/index.ts ABC123 --html
+npx tsx src/index.ts ABC123 --html --theme vivid --ball-size small --color-mode random --layout elk
 
 ```
 
