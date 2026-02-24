@@ -301,7 +301,6 @@ Precedence:
 
 1. `--token` flag
 2. `FIGMA_API_TOKEN` from process env (includes local `.env` via dotenv)
-3. `~/code/_secret/.env`
 
 See `.env.example` for reference.
 
