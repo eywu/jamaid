@@ -395,7 +395,7 @@ export function generateNeonHtml(svgContent: string, options: GenerateNeonHtmlOp
 
   // ── Create traveling balls ──
   var balls = [];
-  var rootG = svgEl.querySelector('g.root');
+  var rootG = svgEl.querySelector('g.root') || svgEl;
 
   svgEl.querySelectorAll('path[data-id]').forEach(function(path) {
     var dataId = path.getAttribute('data-id');
