@@ -109,9 +109,9 @@ Options:
 For `--markdown`, `--png`, `--svg`, and `--html`, the filename is derived from the FigJam file/page name (`<figjam-name>-<page-name>.<ext>`).
 Use `-o custom.ext` only when exporting a single page (`--page ...`).
 
-### Animated Neon HTML (`--html`)
+### Animated HTML (`--html`)
 
-The `--html` flag generates a self-contained HTML file with an animated neon-themed diagram. Open it in any browser — no server required.
+The `--html` flag generates a self-contained HTML file with an animated colorful themed diagram with 'marching ants' dotted connectors and optional 'traveling package' balls. Open it in any browser — no server required.
 
 Features:
 
