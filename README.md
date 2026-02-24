@@ -75,6 +75,7 @@ Options:
   --format <format>        Input format for --source file|stdin: rest, mcp, auto (default: auto)
   --page <name-or-index>   Export only one page by name or 1-based index
   -d, --direction <dir>    Override direction: TD, LR, TB, BT, RL
+  --layout <preset>        Layout preset: auto, default, compact, elk, organic, tree (default: auto)
   --markdown               Output as Markdown (.md) with fenced mermaid code block
   --png                    Output as PNG image (.png, requires mmdc)
   --svg                    Output as SVG image (.svg, requires mmdc)
@@ -175,6 +176,41 @@ jamaid ABC123 --html --color-mode random
 jamaid ABC123 --html --theme sunset --color-mode random --ball-size small
 ```
 
+### Layout Presets (`--layout`)
+
+Control how nodes and connectors are arranged in rendered output (PNG, SVG, HTML). Defaults to `auto`, which analyzes the graph structure and picks the best layout automatically.
+
+| Preset    | Engine       | Best for                                      |
+| --------- | ------------ | --------------------------------------------- |
+| `auto`    | _(varies)_   | Let jamaid pick based on graph analysis        |
+| `default` | Dagre        | Small, simple diagrams (<10 nodes)             |
+| `compact` | Dagre        | Large sparse graphs — tighter spacing          |
+| `elk`     | ELK layered  | Diagrams with many subgraphs/sections          |
+| `organic` | ELK stress   | Dense, heavily connected graphs                |
+| `tree`    | ELK mrtree   | Tree-shaped flows (each node has ≤1 parent)    |
+
+**Auto-detection heuristics:**
+
+The `auto` preset examines each page's graph before rendering:
+
+- **Node count** — small (<10), medium, or large (30+)
+- **Edge density** — edges÷nodes ratio (sparse vs heavily connected)
+- **Max fan-out** — highest number of outgoing edges from any single node
+- **Section count** — number of subgraphs/clusters
+- **Tree shape** — whether every node has at most one incoming edge
+
+```bash
+# Auto-detect (default, no flag needed)
+jamaid ABC123 --png
+
+# Force a specific layout
+jamaid ABC123 --svg --layout elk
+jamaid ABC123 --html --layout organic
+jamaid ABC123 --png --layout compact
+```
+
+ELK-based presets (`elk`, `organic`, `tree`) require mermaid-cli with ELK support, which is included in recent versions of `@mermaid-js/mermaid-cli`.
+
 ### Source Modes
 
 - `--source rest`: Use Figma REST API ingestion (default).
@@ -260,6 +296,7 @@ jamaid/
 │   ├── normalizer.ts # source payload -> canonical graph document
 │   ├── cli-options.ts # CLI source/format parsing + validation
 │   ├── parser.ts     # Figma JSON → intermediate representation
+│   ├── layout.ts     # Layout preset detection & mermaid config
 │   ├── mermaid.ts    # Intermediate repr → Mermaid syntax
 │   ├── neon-html.ts  # Animated neon-themed HTML generator
 │   ├── types.ts      # TypeScript + canonical graph types
@@ -279,7 +316,8 @@ jamaid/
 │   ├── figma-mcp-source.test.ts
 │   ├── normalizer-mcp.test.ts
 │   ├── cli-options.test.ts
-│   └── json-input-sources.test.ts
+│   ├── json-input-sources.test.ts
+│   └── layout.test.ts
 ├── .env.example
 ├── package.json
 ├── tsconfig.json
