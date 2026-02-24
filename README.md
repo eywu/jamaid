@@ -81,7 +81,8 @@ Options:
   --svg                    Output as SVG image (.svg, requires mmdc)
   --html                   Output as animated neon-themed HTML (.html, requires mmdc)
   --ball-size <size>        HTML ball size: small, medium, large (default: medium)
-  --theme <theme>           HTML theme: neon, pastel, ocean, sunset (default: neon)
+  --theme <theme>           HTML theme: neon, pastel, ocean, sunset, spectrum, vivid, candy, forest (default: neon)
+  --no-glow                 Disable halo glow effects in HTML output
   --color-mode <mode>       HTML color mode: cluster, random (default: cluster)
   -h, --help               Display help
 ```
@@ -144,21 +145,28 @@ jamaid ABC123 --html --ball-size large
 
 #### Themes (`--theme`)
 
-Choose from four color themes that control background, node fills, text colors, glow intensity, and the color palette.
+Choose from eight color themes that control background, node fills, text colors, glow intensity, and the color palette.
 
-| Theme    | Background | Palette                              |
-| -------- | ---------- | ------------------------------------ |
-| `neon`   | Dark cyberpunk | Vivid greens, blues, ambers, cyans   |
-| `pastel` | Dark muted     | Soft pinks, lavenders, mints, peaches |
-| `ocean`  | Light blue     | Deep blues, teals, aquas, seafoams    |
-| `sunset` | Light warm     | Ambers, corals, roses, golds          |
+| Theme | Background | Palette |
+| ----- | ---------- | ------- |
+| `neon` | Dark cyberpunk | ![#00ff88](https://placehold.co/12x12/00ff88/00ff88.png) ![#0099ff](https://placehold.co/12x12/0099ff/0099ff.png) ![#ffaa00](https://placehold.co/12x12/ffaa00/ffaa00.png) ![#00cccc](https://placehold.co/12x12/00cccc/00cccc.png) ![#aa55ff](https://placehold.co/12x12/aa55ff/aa55ff.png) ![#ff4466](https://placehold.co/12x12/ff4466/ff4466.png) ![#ff44cc](https://placehold.co/12x12/ff44cc/ff44cc.png) ![#88ff00](https://placehold.co/12x12/88ff00/88ff00.png) |
+| `pastel` | Dark muted | ![#f4a7b9](https://placehold.co/12x12/f4a7b9/f4a7b9.png) ![#c7b3ff](https://placehold.co/12x12/c7b3ff/c7b3ff.png) ![#9edfc4](https://placehold.co/12x12/9edfc4/9edfc4.png) ![#f8c6a6](https://placehold.co/12x12/f8c6a6/f8c6a6.png) ![#9fc9ff](https://placehold.co/12x12/9fc9ff/9fc9ff.png) ![#f29c96](https://placehold.co/12x12/f29c96/f29c96.png) ![#b8d4ad](https://placehold.co/12x12/b8d4ad/b8d4ad.png) ![#d8b4e2](https://placehold.co/12x12/d8b4e2/d8b4e2.png) |
+| `ocean` | Light blue | ![#1f6fae](https://placehold.co/12x12/1f6fae/1f6fae.png) ![#2f9c95](https://placehold.co/12x12/2f9c95/2f9c95.png) ![#4db7c5](https://placehold.co/12x12/4db7c5/4db7c5.png) ![#7fd3cf](https://placehold.co/12x12/7fd3cf/7fd3cf.png) ![#3f6db2](https://placehold.co/12x12/3f6db2/3f6db2.png) ![#2e8fd4](https://placehold.co/12x12/2e8fd4/2e8fd4.png) ![#2aa8a1](https://placehold.co/12x12/2aa8a1/2aa8a1.png) ![#4e6f8f](https://placehold.co/12x12/4e6f8f/4e6f8f.png) |
+| `sunset` | Light warm | ![#f5a623](https://placehold.co/12x12/f5a623/f5a623.png) ![#f28b5b](https://placehold.co/12x12/f28b5b/f28b5b.png) ![#e46c8c](https://placehold.co/12x12/e46c8c/e46c8c.png) ![#f2c14e](https://placehold.co/12x12/f2c14e/f2c14e.png) ![#f4a261](https://placehold.co/12x12/f4a261/f4a261.png) ![#e98973](https://placehold.co/12x12/e98973/e98973.png) ![#f08a24](https://placehold.co/12x12/f08a24/f08a24.png) ![#c96a4a](https://placehold.co/12x12/c96a4a/c96a4a.png) |
+| `spectrum` | Dark neutral | ![#ff3333](https://placehold.co/12x12/ff3333/ff3333.png) ![#ff8800](https://placehold.co/12x12/ff8800/ff8800.png) ![#ffdd00](https://placehold.co/12x12/ffdd00/ffdd00.png) ![#33cc33](https://placehold.co/12x12/33cc33/33cc33.png) ![#00ccdd](https://placehold.co/12x12/00ccdd/00ccdd.png) ![#3366ff](https://placehold.co/12x12/3366ff/3366ff.png) ![#9933ff](https://placehold.co/12x12/9933ff/9933ff.png) ![#ff33aa](https://placehold.co/12x12/ff33aa/ff33aa.png) |
+| `vivid` | Dark deep | ![#ff2288](https://placehold.co/12x12/ff2288/ff2288.png) ![#22dd44](https://placehold.co/12x12/22dd44/22dd44.png) ![#ff8811](https://placehold.co/12x12/ff8811/ff8811.png) ![#2266ff](https://placehold.co/12x12/2266ff/2266ff.png) ![#ffcc00](https://placehold.co/12x12/ffcc00/ffcc00.png) ![#9922ff](https://placehold.co/12x12/9922ff/9922ff.png) ![#00ddcc](https://placehold.co/12x12/00ddcc/00ddcc.png) ![#ff2222](https://placehold.co/12x12/ff2222/ff2222.png) |
+| `candy` | Dark purple | ![#ff1493](https://placehold.co/12x12/ff1493/ff1493.png) ![#00e5cc](https://placehold.co/12x12/00e5cc/00e5cc.png) ![#bb33ff](https://placehold.co/12x12/bb33ff/bb33ff.png) ![#eeff00](https://placehold.co/12x12/eeff00/eeff00.png) ![#ff44ff](https://placehold.co/12x12/ff44ff/ff44ff.png) ![#00aaff](https://placehold.co/12x12/00aaff/00aaff.png) ![#aaff00](https://placehold.co/12x12/aaff00/aaff00.png) ![#ff6622](https://placehold.co/12x12/ff6622/ff6622.png) |
+| `forest` | Dark earthy | ![#2ecc71](https://placehold.co/12x12/2ecc71/2ecc71.png) ![#7fb069](https://placehold.co/12x12/7fb069/7fb069.png) ![#a0855b](https://placehold.co/12x12/a0855b/a0855b.png) ![#55a868](https://placehold.co/12x12/55a868/55a868.png) ![#d4a44c](https://placehold.co/12x12/d4a44c/d4a44c.png) ![#88b89a](https://placehold.co/12x12/88b89a/88b89a.png) ![#b87333](https://placehold.co/12x12/b87333/b87333.png) ![#6b8f5e](https://placehold.co/12x12/6b8f5e/6b8f5e.png) |
 
-Light themes (`ocean`, `sunset`) automatically reduce glow intensity and ball opacity for readability on light backgrounds.
+**Dark themes:** `neon`, `pastel`, `spectrum`, `vivid`, `candy`, `forest` — glow-forward on dark backgrounds.  
+**Light themes:** `ocean`, `sunset` — automatically reduce glow intensity and ball opacity for readability.  
+**High-contrast themes:** `spectrum`, `vivid`, `candy` — designed for maximum visual differentiation between clusters.
 
 ```bash
-jamaid ABC123 --html --theme pastel
-jamaid ABC123 --html --theme ocean
-jamaid ABC123 --html --theme sunset
+jamaid ABC123 --html --theme spectrum
+jamaid ABC123 --html --theme vivid
+jamaid ABC123 --html --theme candy
+jamaid ABC123 --html --theme forest
 ```
 
 #### Color Mode (`--color-mode`)
@@ -174,6 +182,18 @@ jamaid ABC123 --html --color-mode random
 
 # Combine with a theme
 jamaid ABC123 --html --theme sunset --color-mode random --ball-size small
+```
+
+#### Glow Toggle (`--no-glow`)
+
+Disable all halo glow effects (node glows, edge glows, text shadows, ball glow filters). Nodes and edges still render with their theme colors — only the glow halos are removed.
+
+```bash
+# Clean look, no glow halos
+jamaid ABC123 --html --no-glow
+
+# Combine with any theme
+jamaid ABC123 --html --theme spectrum --no-glow
 ```
 
 ### Layout Presets (`--layout`)
