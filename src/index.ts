@@ -2,8 +2,8 @@
 
 import { InvalidArgumentError, Command } from "commander";
 import dotenv from "dotenv";
-import { readFile, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
+import { readFile, unlink, writeFile } from "node:fs/promises";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -20,6 +20,7 @@ import type {
   NeonTheme,
 } from "./neon-html.js";
 import { runDiagramPipeline, type RenderedPageDiagram } from "./pipeline.js";
+import type { LayoutPreset } from "./layout.js";
 import type {
   DiagramInputFormat,
   DiagramSourceMode,
@@ -34,6 +35,7 @@ type CliOptions = {
   source?: DiagramSourceMode;
   format?: DiagramInputFormat;
   direction?: MermaidDirection;
+  layout?: LayoutPreset;
   markdown?: boolean;
   png?: boolean;
   svg?: boolean;
@@ -48,11 +50,31 @@ function sanitizeFilename(name: string): string {
   return name.replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").toLowerCase() || "output";
 }
 
-async function renderWithMmdc(mermaid: string, outPath: string, format: "png" | "svg") {
-  const tmpMmd = join((await import("node:os")).tmpdir(), `jamaid-${Date.now()}.mmd`);
+function createTempBasePath(): string {
+  return join(tmpdir(), `jamaid-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+}
+
+async function renderWithMmdc(
+  mermaid: string,
+  outPath: string,
+  format: "png" | "svg",
+  mermaidConfig: Record<string, unknown> | null = null,
+) {
+  const tempBasePath = createTempBasePath();
+  const tmpMmd = `${tempBasePath}.mmd`;
+  const tmpConfig = mermaidConfig ? `${tempBasePath}.config.json` : null;
   await writeFile(tmpMmd, `${mermaid}\n`, "utf8");
+  if (tmpConfig) {
+    await writeFile(tmpConfig, `${JSON.stringify(mermaidConfig)}\n`, "utf8");
+  }
+
+  const args = ["-i", tmpMmd, "-o", outPath, "-e", format, "-b", "transparent"];
+  if (tmpConfig) {
+    args.push("-c", tmpConfig);
+  }
+
   try {
-    await execFileAsync("mmdc", ["-i", tmpMmd, "-o", outPath, "-e", format, "-b", "transparent"]);
+    await execFileAsync("mmdc", args);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes("ENOENT")) {
@@ -60,11 +82,22 @@ async function renderWithMmdc(mermaid: string, outPath: string, format: "png" | 
     }
     throw new Error(`${format.toUpperCase()} rendering failed: ${msg}`);
   } finally {
-    await import("node:fs/promises").then((fs) => fs.unlink(tmpMmd).catch(() => {}));
+    await unlink(tmpMmd).catch(() => {});
+    if (tmpConfig) {
+      await unlink(tmpConfig).catch(() => {});
+    }
   }
 }
 
 const VALID_DIRECTIONS = new Set<MermaidDirection>(["TD", "LR", "TB", "BT", "RL"]);
+const VALID_LAYOUTS = new Set<LayoutPreset>([
+  "auto",
+  "default",
+  "compact",
+  "elk",
+  "organic",
+  "tree",
+]);
 const VALID_BALL_SIZES = new Set<NeonBallSize>(["small", "medium", "large"]);
 const VALID_THEMES = new Set<NeonTheme>(["neon", "pastel", "ocean", "sunset"]);
 const VALID_COLOR_MODES = new Set<NeonColorMode>(["cluster", "random"]);
@@ -73,6 +106,14 @@ function parseDirection(value: string): MermaidDirection {
   const normalized = value.trim().toUpperCase() as MermaidDirection;
   if (!VALID_DIRECTIONS.has(normalized)) {
     throw new InvalidArgumentError("Direction must be one of: TD, LR, TB, BT, RL.");
+  }
+  return normalized;
+}
+
+function parseLayout(value: string): LayoutPreset {
+  const normalized = value.trim().toLowerCase() as LayoutPreset;
+  if (!VALID_LAYOUTS.has(normalized)) {
+    throw new InvalidArgumentError("Layout must be one of: auto, default, compact, elk, organic, tree.");
   }
   return normalized;
 }
@@ -171,17 +212,39 @@ function defaultContent(mermaid: string, options: CliOptions): string {
   return `${mermaid}\n`;
 }
 
-async function renderSvgString(mermaid: string): Promise<string> {
-  const tmpMmd = join((await import("node:os")).tmpdir(), `jamaid-${Date.now()}.mmd`);
-  const tmpSvg = tmpMmd.replace(".mmd", ".svg");
+async function renderSvgString(
+  mermaid: string,
+  mermaidConfig: Record<string, unknown> | null = null,
+): Promise<string> {
+  const tempBasePath = createTempBasePath();
+  const tmpMmd = `${tempBasePath}.mmd`;
+  const tmpSvg = `${tempBasePath}.svg`;
+  const tmpConfig = mermaidConfig ? `${tempBasePath}.config.json` : null;
   await writeFile(tmpMmd, `${mermaid}\n`, "utf8");
+  if (tmpConfig) {
+    await writeFile(tmpConfig, `${JSON.stringify(mermaidConfig)}\n`, "utf8");
+  }
+
+  const args = ["-i", tmpMmd, "-o", tmpSvg, "-e", "svg", "-t", "dark", "-b", "transparent"];
+  if (tmpConfig) {
+    args.push("-c", tmpConfig);
+  }
+
   try {
-    await execFileAsync("mmdc", ["-i", tmpMmd, "-o", tmpSvg, "-e", "svg", "-t", "dark", "-b", "transparent"]);
+    await execFileAsync("mmdc", args);
     return await readFile(tmpSvg, "utf8");
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("ENOENT")) {
+      throw new Error("mmdc (mermaid-cli) not found. Install it with: npm i -g @mermaid-js/mermaid-cli");
+    }
+    throw new Error(`SVG rendering failed: ${msg}`);
   } finally {
-    const fs = await import("node:fs/promises");
-    await fs.unlink(tmpMmd).catch(() => {});
-    await fs.unlink(tmpSvg).catch(() => {});
+    await unlink(tmpMmd).catch(() => {});
+    await unlink(tmpSvg).catch(() => {});
+    if (tmpConfig) {
+      await unlink(tmpConfig).catch(() => {});
+    }
   }
 }
 
@@ -189,20 +252,21 @@ async function writeDiagramOutput(
   mermaid: string,
   outPath: string,
   options: CliOptions,
+  mermaidConfig: Record<string, unknown> | null,
   pageTitle?: string,
   htmlOptions: Pick<GenerateNeonHtmlOptions, "ballSize" | "theme" | "colorMode"> = {},
 ) {
   if (options.png) {
-    await renderWithMmdc(mermaid, outPath, "png");
+    await renderWithMmdc(mermaid, outPath, "png", mermaidConfig);
     return;
   }
   if (options.svg) {
-    await renderWithMmdc(mermaid, outPath, "svg");
+    await renderWithMmdc(mermaid, outPath, "svg", mermaidConfig);
     return;
   }
   if (options.html) {
     const { generateNeonHtml } = await import("./neon-html.js");
-    const svgString = await renderSvgString(mermaid);
+    const svgString = await renderSvgString(mermaid, mermaidConfig);
     await writeFile(
       outPath,
       generateNeonHtml(svgString, { title: pageTitle, ...htmlOptions }),
@@ -239,6 +303,12 @@ program
     "-d, --direction <direction>",
     "Mermaid flow direction override (TD, LR, TB, BT, RL)",
     parseDirection,
+  )
+  .option(
+    "--layout <preset>",
+    "Layout preset: auto, default, compact, elk, organic, tree",
+    parseLayout,
+    "auto",
   )
   .option("--markdown", "Output as Markdown with fenced mermaid code block (<filename>.md)")
   .option("--png", "Output as PNG image (<filename>.png, requires mmdc/mermaid-cli)")
@@ -278,6 +348,7 @@ program
       source,
       format: isJsonInputSource(source) ? format : undefined,
       direction: options.direction,
+      layout: options.layout,
     });
     const pages = selectPages<RenderedPageDiagram>(pipeline.pages, options.page);
 
@@ -311,7 +382,14 @@ program
 
       const defaultName = `${fileBaseName}-${sanitizeFilename(page.pageName)}${extensionFor(options)}`;
       const outPath = options.output ?? defaultName;
-      await writeDiagramOutput(mermaid, outPath, options, page.pageName, htmlOptions);
+      await writeDiagramOutput(
+        mermaid,
+        outPath,
+        options,
+        page.mermaidConfig,
+        page.pageName,
+        htmlOptions,
+      );
       process.stderr.write(`Written to ${outPath}\n`);
       return;
     }
@@ -323,7 +401,14 @@ program
     for (const page of pages) {
       const mermaid = page.mermaid;
       const outPath = `${fileBaseName}-${sanitizeFilename(page.pageName)}${extensionFor(options)}`;
-      await writeDiagramOutput(mermaid, outPath, options, page.pageName, htmlOptions);
+      await writeDiagramOutput(
+        mermaid,
+        outPath,
+        options,
+        page.mermaidConfig,
+        page.pageName,
+        htmlOptions,
+      );
       process.stderr.write(`Written to ${outPath}\n`);
     }
   });

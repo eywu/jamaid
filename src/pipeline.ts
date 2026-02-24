@@ -1,3 +1,8 @@
+import {
+  layoutToMermaidConfig,
+  resolveLayout,
+  type LayoutPreset,
+} from "./layout.js";
 import { toMermaid } from "./mermaid.js";
 import { normalizeDiagramDocument } from "./normalizer.js";
 import type { DiagramSource, IngestedDiagramDocument } from "./sources/diagram-source.js";
@@ -34,10 +39,13 @@ export interface RenderedPageDiagram {
   pageName: string;
   diagram: CanonicalDiagramDocument["pages"][number]["diagram"];
   mermaid: string;
+  mermaidConfig: Record<string, unknown> | null;
+  resolvedLayout: LayoutPreset;
 }
 
 export interface RunPipelineOptions extends IngestPipelineOptions {
   direction?: MermaidDirection;
+  layout?: LayoutPreset;
 }
 
 export interface RunPipelineResult {
@@ -138,13 +146,19 @@ export function transformNormalized(
 export function renderTransformed(
   transformed: TransformedDiagramDocument,
   direction?: MermaidDirection,
+  layout: LayoutPreset = "auto",
 ): RenderedPageDiagram[] {
-  return transformed.pages.map((page) => ({
-    pageId: page.pageId,
-    pageName: page.pageName,
-    diagram: page.diagram,
-    mermaid: toMermaid(page.diagram, { direction }),
-  }));
+  return transformed.pages.map((page) => {
+    const resolvedLayout = resolveLayout(layout, page.diagram);
+    return {
+      pageId: page.pageId,
+      pageName: page.pageName,
+      diagram: page.diagram,
+      mermaid: toMermaid(page.diagram, { direction }),
+      mermaidConfig: layoutToMermaidConfig(resolvedLayout),
+      resolvedLayout,
+    };
+  });
 }
 
 export async function runDiagramPipeline(
@@ -153,7 +167,11 @@ export async function runDiagramPipeline(
   const ingested = await ingestDiagram(options);
   const normalized = normalizeIngested(ingested.ingested);
   const transformed = transformNormalized(normalized);
-  const pages = renderTransformed(transformed, options.direction);
+  const pages = renderTransformed(
+    transformed,
+    options.direction,
+    options.layout ?? "auto",
+  );
 
   return {
     requestedSource: options.source,

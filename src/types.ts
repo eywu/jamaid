@@ -1,3 +1,5 @@
+import type { LayoutPreset } from "./layout.js";
+
 export type MermaidDirection = "TD" | "LR" | "TB" | "BT" | "RL";
 export type DiagramSourceKind = "rest" | "mcp";
 export type DiagramSourceMode = DiagramSourceKind | "auto" | "file" | "stdin";
@@ -85,6 +87,7 @@ export interface CanonicalDiagramDocument {
 
 export interface MermaidRenderOptions {
   direction?: MermaidDirection;
+  layout?: LayoutPreset;
 }
 
 // Backward-compatible aliases during v0.4 migration.
