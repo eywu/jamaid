@@ -2,6 +2,10 @@
 
 Convert FigJam flow diagrams into Mermaid 🧜‍♀️ flowchart markdown.
 
+<p align="center">
+  <img src="docs/demo.gif" alt="jamaid neon HTML output demo" width="700">
+</p>
+
 ## Requirements
 
 - Node.js 18+
