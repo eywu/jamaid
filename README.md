@@ -17,7 +17,7 @@ Convert FigJam flow diagrams into Mermaid 🧜‍♀️ flowcharts/markdown.
 ## Requirements
 
 - Node.js 18+
-- A Figma API token with `file_content:read` scope for `--source rest|mcp|auto` (not required for `--source file|stdin`)
+- A [Figma API token](https://developers.figma.com/docs/rest-api/authentication/#access-tokens) with `file_content:read` scope for `--source rest|mcp|auto` (not required for `--source file|stdin`)
 
 ## Install
 
