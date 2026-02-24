@@ -7,7 +7,7 @@ Convert FigJam flow diagrams into Mermaid 🧜‍♀️ flowcharts/markdown.
 - Convert [FigJam](https://www.figma.com/figjam/) to [Mermaid](https://github.com/mermaid-js/mermaid) via Figma [REST API](https://developers.figma.com/docs/rest-api/file-endpoints/), [MCP](https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server), or the [raw XML](https://developers.figma.com/docs/figma-mcp-server/tools-and-prompts/#get_figjam)/JSON
 - Extract FigJam pages separately
 - Output to PNG, SVG, or colorful animated HTML flow diagrams
-- Auto arrange flowdiagram nodes and connectors in differen configurations for better comprehension
+- Auto arrange flow diagram nodes and connectors in different configurations for better comprehension
 - Use it directly from the command-line or with a Claude Cowork/Code skill
 
 <p align="center">
