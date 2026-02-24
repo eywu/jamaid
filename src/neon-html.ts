@@ -147,6 +147,7 @@ export type GenerateNeonHtmlOptions = {
   ballSize?: NeonBallSize;
   theme?: NeonTheme;
   colorMode?: NeonColorMode;
+  glow?: boolean;
 };
 
 export function generateNeonHtml(svgContent: string, options: GenerateNeonHtmlOptions = {}): string {
@@ -155,6 +156,7 @@ export function generateNeonHtml(svgContent: string, options: GenerateNeonHtmlOp
     ballSize = "medium",
     theme = "neon",
     colorMode = "cluster",
+    glow = true,
   } = options;
   const themeConfig = THEME_CONFIGS[theme];
   const ballConfig = BALL_SIZE_CONFIGS[ballSize];
@@ -253,6 +255,7 @@ export function generateNeonHtml(svgContent: string, options: GenerateNeonHtmlOp
   var THEME = ${JSON.stringify(themeConfig)};
   var PALETTE = THEME.palette;
   var COLOR_MODE = ${JSON.stringify(colorMode)};
+  var GLOW_ENABLED = ${JSON.stringify(glow)};
 
   // Inject SVG
   var container = document.getElementById('diagram');
@@ -276,6 +279,7 @@ export function generateNeonHtml(svgContent: string, options: GenerateNeonHtmlOp
   }
 
   function glowFilter(rgb, blurs, alphas) {
+    if (!GLOW_ENABLED) return 'none';
     var shadows = [];
     for (var i = 0; i < blurs.length; i++) {
       var alpha = alphas[Math.min(i, alphas.length - 1)];
@@ -285,6 +289,7 @@ export function generateNeonHtml(svgContent: string, options: GenerateNeonHtmlOp
   }
 
   function textGlow(rgb, first, second) {
+    if (!GLOW_ENABLED) return 'none';
     var firstOpacity = clampOpacity(first * THEME.textGlowScale).toFixed(3);
     var secondOpacity = clampOpacity(second * THEME.textGlowScale).toFixed(3);
     return '0 0 8px rgba(' + rgb + ',' + firstOpacity + '), 0 0 16px rgba(' + rgb + ',' + secondOpacity + ')';
@@ -413,7 +418,7 @@ export function generateNeonHtml(svgContent: string, options: GenerateNeonHtmlOp
     circle.setAttribute('r', '${ballConfig.radius}');
     circle.setAttribute('fill', color.hex);
     circle.setAttribute('fill-opacity', String(THEME.ballOpacity));
-    circle.setAttribute('filter', 'url(#ball-glow)');
+    if (GLOW_ENABLED) circle.setAttribute('filter', 'url(#ball-glow)');
 
     if (rootG) rootG.appendChild(circle);
 

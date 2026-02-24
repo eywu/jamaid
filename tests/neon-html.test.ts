@@ -48,6 +48,16 @@ describe("generateNeonHtml", () => {
     expect(ocean).toContain("linear-gradient(160deg, #f2fbff 0%, #dff2fa 45%, #e8f7ff 100%)");
   });
 
+  it("disables glow effects when glow is false", () => {
+    const withGlow = generateNeonHtml(SAMPLE_SVG, { glow: true });
+    const noGlow = generateNeonHtml(SAMPLE_SVG, { glow: false });
+
+    expect(withGlow).toContain("var GLOW_ENABLED = true;");
+    expect(noGlow).toContain("var GLOW_ENABLED = false;");
+    // Both should still contain glowFilter function
+    expect(noGlow).toContain("function glowFilter");
+  });
+
   it("embeds color mode and random-mode branch into runtime JS", () => {
     const html = generateNeonHtml(SAMPLE_SVG, { colorMode: "random" });
     expect(html).toContain('var COLOR_MODE = "random";');

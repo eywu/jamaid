@@ -44,6 +44,7 @@ type CliOptions = {
   ballSize?: NeonBallSize;
   theme?: NeonTheme;
   colorMode?: NeonColorMode;
+  glow?: boolean;
 };
 
 function sanitizeFilename(name: string): string {
@@ -332,6 +333,7 @@ program
     parseColorMode,
     "cluster",
   )
+  .option("--no-glow", "Disable halo glow effects in HTML output")
   .action(async (input: string | undefined, options: CliOptions) => {
     const formatFlags = [options.markdown, options.png, options.svg, options.html].filter(Boolean).length;
     if (formatFlags > 1) {
@@ -361,10 +363,11 @@ program
     }
 
     const fileBaseName = sanitizeFilename(pipeline.fileName ?? pipeline.fileKey);
-    const htmlOptions: Pick<GenerateNeonHtmlOptions, "ballSize" | "theme" | "colorMode"> = {
+    const htmlOptions: Pick<GenerateNeonHtmlOptions, "ballSize" | "theme" | "colorMode" | "glow"> = {
       ballSize: options.ballSize,
       theme: options.theme,
       colorMode: options.colorMode,
+      glow: options.glow !== false,
     };
 
     if (pages.length === 1) {
