@@ -63,7 +63,7 @@ npx tsx src/index.ts ABC123 --png
 # Render as SVG image (requires mermaid-cli)
 npx tsx src/index.ts ABC123 --svg
 
-# Render as animated neon-themed HTML (requires mermaid-cli)
+# Render as colorful fully animated HTML workflow diagram (requires mermaid-cli)
 npx tsx src/index.ts ABC123 --html --theme vivid --ball-size small --color-mode random --layout elk
 
 ```
