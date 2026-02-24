@@ -31,6 +31,7 @@ type CliOptions = {
   markdown?: boolean;
   png?: boolean;
   svg?: boolean;
+  html?: boolean;
   page?: string;
 };
 
@@ -123,6 +124,7 @@ function extensionFor(options: CliOptions): string {
   if (options.markdown) return ".md";
   if (options.png) return ".png";
   if (options.svg) return ".svg";
+  if (options.html) return ".html";
   return ".mmd";
 }
 
@@ -133,13 +135,33 @@ function defaultContent(mermaid: string, options: CliOptions): string {
   return `${mermaid}\n`;
 }
 
-async function writeDiagramOutput(mermaid: string, outPath: string, options: CliOptions) {
+async function renderSvgString(mermaid: string): Promise<string> {
+  const tmpMmd = join((await import("node:os")).tmpdir(), `jamaid-${Date.now()}.mmd`);
+  const tmpSvg = tmpMmd.replace(".mmd", ".svg");
+  await writeFile(tmpMmd, `${mermaid}\n`, "utf8");
+  try {
+    await execFileAsync("mmdc", ["-i", tmpMmd, "-o", tmpSvg, "-e", "svg", "-t", "dark", "-b", "transparent"]);
+    return await readFile(tmpSvg, "utf8");
+  } finally {
+    const fs = await import("node:fs/promises");
+    await fs.unlink(tmpMmd).catch(() => {});
+    await fs.unlink(tmpSvg).catch(() => {});
+  }
+}
+
+async function writeDiagramOutput(mermaid: string, outPath: string, options: CliOptions, pageTitle?: string) {
   if (options.png) {
     await renderWithMmdc(mermaid, outPath, "png");
     return;
   }
   if (options.svg) {
     await renderWithMmdc(mermaid, outPath, "svg");
+    return;
+  }
+  if (options.html) {
+    const { generateNeonHtml } = await import("./neon-html.js");
+    const svgString = await renderSvgString(mermaid);
+    await writeFile(outPath, generateNeonHtml(svgString, pageTitle), "utf8");
     return;
   }
 
@@ -175,10 +197,11 @@ program
   .option("--markdown", "Output as Markdown with fenced mermaid code block (<filename>.md)")
   .option("--png", "Output as PNG image (<filename>.png, requires mmdc/mermaid-cli)")
   .option("--svg", "Output as SVG image (<filename>.svg, requires mmdc/mermaid-cli)")
+  .option("--html", "Output as animated neon-themed HTML (<filename>.html, requires mmdc)")
   .action(async (input: string | undefined, options: CliOptions) => {
-    const formatFlags = [options.markdown, options.png, options.svg].filter(Boolean).length;
+    const formatFlags = [options.markdown, options.png, options.svg, options.html].filter(Boolean).length;
     if (formatFlags > 1) {
-      throw new Error("Use only one output format flag at a time: --markdown, --png, or --svg.");
+      throw new Error("Use only one output format flag at a time: --markdown, --png, --svg, or --html.");
     }
 
     const source = options.source ?? "rest";
@@ -212,14 +235,14 @@ program
 
       const mermaid = page.mermaid;
 
-      if (!options.output && !options.markdown && !options.png && !options.svg) {
+      if (!options.output && !options.markdown && !options.png && !options.svg && !options.html) {
         process.stdout.write(`${mermaid}\n`);
         return;
       }
 
       const defaultName = `${fileBaseName}-${sanitizeFilename(page.pageName)}${extensionFor(options)}`;
       const outPath = options.output ?? defaultName;
-      await writeDiagramOutput(mermaid, outPath, options);
+      await writeDiagramOutput(mermaid, outPath, options, page.pageName);
       process.stderr.write(`Written to ${outPath}\n`);
       return;
     }
@@ -231,7 +254,7 @@ program
     for (const page of pages) {
       const mermaid = page.mermaid;
       const outPath = `${fileBaseName}-${sanitizeFilename(page.pageName)}${extensionFor(options)}`;
-      await writeDiagramOutput(mermaid, outPath, options);
+      await writeDiagramOutput(mermaid, outPath, options, page.pageName);
       process.stderr.write(`Written to ${outPath}\n`);
     }
   });

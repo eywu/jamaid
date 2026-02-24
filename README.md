@@ -55,6 +55,9 @@ npx tsx src/index.ts ABC123 --png
 # Render as SVG image (requires mermaid-cli)
 npx tsx src/index.ts ABC123 --svg
 
+# Render as animated neon-themed HTML (requires mermaid-cli)
+npx tsx src/index.ts ABC123 --html
+
 ```
 
 ## CLI
@@ -75,6 +78,7 @@ Options:
   --markdown               Output as Markdown (.md) with fenced mermaid code block
   --png                    Output as PNG image (.png, requires mmdc)
   --svg                    Output as SVG image (.svg, requires mmdc)
+  --html                   Output as animated neon-themed HTML (.html, requires mmdc)
   -h, --help               Display help
 ```
 
@@ -87,9 +91,37 @@ Options:
 | `--markdown` | Fenced mermaid in Markdown | `<figjam-name>.md` |
 | `--png`      | PNG image                  | `<figjam-name>.png` |
 | `--svg`      | SVG image                  | `<figjam-name>.svg` |
+| `--html`     | Animated neon-themed HTML  | `<figjam-name>.html` |
 
-For `--markdown`, `--png`, and `--svg`, the filename is derived from the FigJam file/page name (`<figjam-name>-<page-name>.<ext>`).
+For `--markdown`, `--png`, `--svg`, and `--html`, the filename is derived from the FigJam file/page name (`<figjam-name>-<page-name>.<ext>`).
 Use `-o custom.ext` only when exporting a single page (`--page ...`).
+
+### Animated Neon HTML (`--html`)
+
+The `--html` flag generates a self-contained HTML file with an animated neon-themed diagram. Open it in any browser — no server required.
+
+Features:
+
+- **Dark cyberpunk background** with radial gradient
+- **Auto-colored subgraphs** — each subgraph gets a distinct neon hue (green, blue, amber, cyan, purple, etc.)
+- **Glowing nodes** — multi-layered CSS `drop-shadow` glow halos on every node
+- **Animated marching-ant connectors** — dashed edges with flowing dash animation
+- **Traveling glow balls** — luminous orbs that travel along each connector path via `requestAnimationFrame`
+- **Color-coded edges** — connector color matches the source node's subgraph
+- **Text glow** — node labels emit a subtle neon glow matching their group color
+
+The HTML is fully self-contained (no external dependencies) and works offline.
+
+```bash
+# From a FigJam file
+jamaid ABC123 --html
+
+# With page selection
+jamaid ABC123 --html --page "Architecture"
+
+# Custom output path
+jamaid ABC123 --html --page 1 -o my-diagram.html
+```
 
 ### Source Modes
 
@@ -177,6 +209,7 @@ jamaid/
 │   ├── cli-options.ts # CLI source/format parsing + validation
 │   ├── parser.ts     # Figma JSON → intermediate representation
 │   ├── mermaid.ts    # Intermediate repr → Mermaid syntax
+│   ├── neon-html.ts  # Animated neon-themed HTML generator
 │   ├── types.ts      # TypeScript + canonical graph types
 │   └── sources/
 │       ├── diagram-source.ts

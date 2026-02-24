@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><title>Ball test</title></head>
+<body style="background:#0a0e1a; display:flex; align-items:center; justify-content:center; min-height:100vh;">
+<svg width="600" height="200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow" x="-300%" y="-300%" width="700%" height="700%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6"/>
+    </filter>
+  </defs>
+  <path id="test-path" d="M50,100 C200,20 400,180 550,100" fill="none" stroke="#00ff88" stroke-width="2" stroke-dasharray="8 5"/>
+  <circle id="ball" r="8" fill="#00ff88" filter="url(#glow)"/>
+</svg>
+<script>
+const path = document.getElementById('test-path');
+const ball = document.getElementById('ball');
+const len = path.getTotalLength();
+let start = null;
+function anim(ts) {
+  if (!start) start = ts;
+  const progress = ((ts - start) / 3000) % 1;
+  const pt = path.getPointAtLength(progress * len);
+  ball.setAttribute('cx', pt.x);
+  ball.setAttribute('cy', pt.y);
+  requestAnimationFrame(anim);
+}
+requestAnimationFrame(anim);
+</script>
+</body></html>

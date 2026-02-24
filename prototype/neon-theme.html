@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jamaid — Neon Theme Prototype</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: radial-gradient(ellipse at center, #0f1729 0%, #0a0e1a 60%, #060910 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  .diagram-container {
+    width: 100%;
+    max-width: 1600px;
+  }
+
+  :root {
+    --neon-green:   #00ff88;
+    --neon-blue:    #0099ff;
+    --neon-amber:   #ffaa00;
+    --neon-cyan:    #00cccc;
+    --neon-purple:  #aa55ff;
+  }
+
+  /* ── Global SVG overrides ── */
+  svg.flowchart {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    overflow: visible !important;
+  }
+
+  /* Kill default fills */
+  svg .node rect, svg .node path, svg .node circle, svg .node ellipse {
+    fill: rgba(10, 14, 26, 0.9) !important;
+    stroke-width: 1.5px !important;
+  }
+
+  svg .node .label text, svg .nodeLabel p {
+    fill: #e8e8e8 !important;
+    color: #e8e8e8 !important;
+    font-size: 14px !important;
+  }
+
+  /* ── Cluster styling ── */
+  svg .cluster rect {
+    fill: transparent !important;
+    stroke-width: 1.5px !important;
+    stroke-dasharray: 6 4 !important;
+    rx: 14 !important;
+    ry: 14 !important;
+  }
+
+  svg .cluster-label text, svg .cluster-label span {
+    font-size: 11px !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+  }
+
+  /* ── Edge labels ── */
+  svg .edgeLabel { background-color: transparent !important; }
+  svg .edgeLabel rect {
+    fill: rgba(10, 14, 26, 0.9) !important;
+    stroke: rgba(100, 130, 180, 0.3) !important;
+    stroke-width: 1px !important;
+    rx: 4 !important; ry: 4 !important;
+    opacity: 1 !important;
+  }
+  svg .edgeLabel .labelBkg { background-color: transparent !important; }
+  svg .edgeLabel span, svg .edgeLabel p {
+    color: rgba(180, 200, 230, 0.9) !important;
+    background-color: transparent !important;
+    font-size: 11px !important;
+  }
+
+  /* ── FRONTEND green ── */
+  #frontend > rect {
+    stroke: var(--neon-green) !important;
+    filter: drop-shadow(0 0 4px rgba(0,255,136,0.6)) drop-shadow(0 0 12px rgba(0,255,136,0.35)) drop-shadow(0 0 24px rgba(0,255,136,0.15));
+  }
+  #frontend .cluster-label span { color: var(--neon-green) !important; }
+
+  #flowchart-n1-0 rect, #flowchart-n2-1 rect {
+    stroke: var(--neon-green) !important;
+    filter: drop-shadow(0 0 3px rgba(0,255,136,0.8)) drop-shadow(0 0 8px rgba(0,255,136,0.6)) drop-shadow(0 0 18px rgba(0,255,136,0.35)) drop-shadow(0 0 35px rgba(0,255,136,0.15));
+  }
+  #flowchart-n1-0 .nodeLabel p, #flowchart-n2-1 .nodeLabel p {
+    text-shadow: 0 0 8px rgba(0,255,136,0.4), 0 0 16px rgba(0,255,136,0.2);
+  }
+
+  /* ── BACKEND blue ── */
+  #backend > rect {
+    stroke: var(--neon-blue) !important;
+    filter: drop-shadow(0 0 6px rgba(0,153,255,0.5)) drop-shadow(0 0 14px rgba(0,153,255,0.3)) drop-shadow(0 0 28px rgba(0,153,255,0.15));
+  }
+  #backend .cluster-label span { color: var(--neon-blue) !important; }
+
+  #flowchart-n3-2 rect, #flowchart-n4-3 rect {
+    stroke: var(--neon-blue) !important;
+    filter: drop-shadow(0 0 3px rgba(0,153,255,0.8)) drop-shadow(0 0 8px rgba(0,153,255,0.6)) drop-shadow(0 0 18px rgba(0,153,255,0.35)) drop-shadow(0 0 35px rgba(0,153,255,0.15));
+  }
+  #flowchart-n3-2 .nodeLabel p, #flowchart-n4-3 .nodeLabel p {
+    text-shadow: 0 0 8px rgba(0,153,255,0.4), 0 0 16px rgba(0,153,255,0.2);
+  }
+
+  /* ── ORCHESTRATION amber ── */
+  #orchestration > rect {
+    stroke: var(--neon-amber) !important;
+    filter: drop-shadow(0 0 6px rgba(255,170,0,0.5)) drop-shadow(0 0 14px rgba(255,170,0,0.3)) drop-shadow(0 0 28px rgba(255,170,0,0.15));
+  }
+  #orchestration .cluster-label span { color: var(--neon-amber) !important; }
+
+  #flowchart-n5-4 rect, #flowchart-n6-5 rect, #flowchart-n7-6 rect, #flowchart-n8-7 rect {
+    stroke: var(--neon-amber) !important;
+    filter: drop-shadow(0 0 3px rgba(255,170,0,0.8)) drop-shadow(0 0 8px rgba(255,170,0,0.6)) drop-shadow(0 0 18px rgba(255,170,0,0.35)) drop-shadow(0 0 35px rgba(255,170,0,0.15));
+  }
+  #flowchart-n5-4 .nodeLabel p, #flowchart-n6-5 .nodeLabel p,
+  #flowchart-n7-6 .nodeLabel p, #flowchart-n8-7 .nodeLabel p {
+    text-shadow: 0 0 8px rgba(255,170,0,0.4), 0 0 16px rgba(255,170,0,0.2);
+  }
+
+  /* ── PERSISTENCE cyan ── */
+  #persistence > rect {
+    stroke: var(--neon-cyan) !important;
+    filter: drop-shadow(0 0 6px rgba(0,204,204,0.5)) drop-shadow(0 0 14px rgba(0,204,204,0.3)) drop-shadow(0 0 28px rgba(0,204,204,0.15));
+  }
+  #persistence .cluster-label span { color: var(--neon-cyan) !important; }
+
+  #flowchart-n9-8 path, #flowchart-n10-9 path, #flowchart-n11-10 path, #flowchart-n12-11 path {
+    stroke: var(--neon-cyan) !important;
+    filter: drop-shadow(0 0 3px rgba(0,204,204,0.8)) drop-shadow(0 0 8px rgba(0,204,204,0.6)) drop-shadow(0 0 18px rgba(0,204,204,0.35)) drop-shadow(0 0 35px rgba(0,204,204,0.15));
+  }
+  #flowchart-n9-8 .nodeLabel p, #flowchart-n10-9 .nodeLabel p,
+  #flowchart-n11-10 .nodeLabel p, #flowchart-n12-11 .nodeLabel p {
+    text-shadow: 0 0 8px rgba(0,204,204,0.4), 0 0 16px rgba(0,204,204,0.2);
+  }
+
+  /* ── OBSERVABILITY purple ── */
+  #observability > rect {
+    stroke: var(--neon-purple) !important;
+    filter: drop-shadow(0 0 6px rgba(170,85,255,0.5)) drop-shadow(0 0 14px rgba(170,85,255,0.3)) drop-shadow(0 0 28px rgba(170,85,255,0.15));
+  }
+  #observability .cluster-label span { color: var(--neon-purple) !important; }
+
+  #flowchart-n13-12 rect, #flowchart-n14-13 rect {
+    stroke: var(--neon-purple) !important;
+    filter: drop-shadow(0 0 3px rgba(170,85,255,0.8)) drop-shadow(0 0 8px rgba(170,85,255,0.6)) drop-shadow(0 0 18px rgba(170,85,255,0.35)) drop-shadow(0 0 35px rgba(170,85,255,0.15));
+  }
+  #flowchart-n13-12 .nodeLabel p, #flowchart-n14-13 .nodeLabel p {
+    text-shadow: 0 0 8px rgba(170,85,255,0.4), 0 0 16px rgba(170,85,255,0.2);
+  }
+
+  /* ── EDGES — animated dashes + color ── */
+  svg .edgePath .path, svg .flowchart-link {
+    stroke-width: 2px !important;
+    stroke-dasharray: 8 5 !important;
+    animation: flow-dash 1.2s linear infinite !important;
+  }
+
+  @keyframes flow-dash {
+    to { stroke-dashoffset: -13; }
+  }
+
+  svg .marker path, svg .arrowMarkerPath {
+    stroke: none !important;
+  }
+
+  /* Color edges by data-id source node */
+  /* Frontend edges */
+  [data-id="L_n1_n2_0"], [data-id="L_n2_n3_0"] {
+    stroke: var(--neon-green) !important;
+    filter: drop-shadow(0 0 3px rgba(0,255,136,0.7)) drop-shadow(0 0 8px rgba(0,255,136,0.4)) drop-shadow(0 0 16px rgba(0,255,136,0.2));
+  }
+
+  /* Backend edges */
+  [data-id="L_n3_n4_0"], [data-id="L_n3_n5_0"] {
+    stroke: var(--neon-blue) !important;
+    filter: drop-shadow(0 0 3px rgba(0,153,255,0.7)) drop-shadow(0 0 8px rgba(0,153,255,0.4)) drop-shadow(0 0 16px rgba(0,153,255,0.2));
+  }
+  [data-id="L_n3_n11_0"], [data-id="L_n3_n12_0"] {
+    stroke: var(--neon-cyan) !important;
+    filter: drop-shadow(0 0 3px rgba(0,204,204,0.7)) drop-shadow(0 0 8px rgba(0,204,204,0.4)) drop-shadow(0 0 16px rgba(0,204,204,0.2));
+  }
+  [data-id="L_n3_n13_0"] {
+    stroke: var(--neon-purple) !important;
+    filter: drop-shadow(0 0 3px rgba(170,85,255,0.7)) drop-shadow(0 0 8px rgba(170,85,255,0.4)) drop-shadow(0 0 16px rgba(170,85,255,0.2));
+  }
+  [data-id="L_n3_n14_0"] {
+    stroke: #ff4466 !important;
+    filter: drop-shadow(0 0 3px rgba(255,68,102,0.7)) drop-shadow(0 0 8px rgba(255,68,102,0.4)) drop-shadow(0 0 16px rgba(255,68,102,0.2));
+  }
+
+  /* Orchestration edges */
+  [data-id="L_n5_n6_0"], [data-id="L_n6_n7_0"], [data-id="L_n7_n8_0"] {
+    stroke: var(--neon-amber) !important;
+    filter: drop-shadow(0 0 3px rgba(255,170,0,0.7)) drop-shadow(0 0 8px rgba(255,170,0,0.4)) drop-shadow(0 0 16px rgba(255,170,0,0.2));
+  }
+  [data-id="L_n7_n9_0"], [data-id="L_n8_n10_0"] {
+    stroke: var(--neon-cyan) !important;
+    filter: drop-shadow(0 0 3px rgba(0,204,204,0.7)) drop-shadow(0 0 8px rgba(0,204,204,0.4)) drop-shadow(0 0 16px rgba(0,204,204,0.2));
+  }
+</style>
+</head>
+<body>
+<div class="diagram-container" id="diagram"></div>
+<script>
+async function init() {
+  const resp = await fetch('./sample.svg');
+  let svg = await resp.text();
+  document.getElementById('diagram').innerHTML = svg;
+
+  // Fix cluster label truncation
+  document.querySelectorAll('.cluster-label foreignObject').forEach(fo => {
+    fo.setAttribute('width', '300');
+  });
+
+  // Traveling glow balls — using requestAnimationFrame + getPointAtLength
+  const edgeColors = {
+    'L_n1_n2_0': '#00ff88', 'L_n2_n3_0': '#00ff88',
+    'L_n3_n4_0': '#0099ff', 'L_n3_n5_0': '#0099ff',
+    'L_n5_n6_0': '#ffaa00', 'L_n6_n7_0': '#ffaa00', 'L_n7_n8_0': '#ffaa00',
+    'L_n7_n9_0': '#00cccc', 'L_n8_n10_0': '#00cccc',
+    'L_n3_n11_0': '#00cccc', 'L_n3_n12_0': '#00cccc',
+    'L_n3_n13_0': '#aa55ff', 'L_n3_n14_0': '#ff4466',
+  };
+
+  const svgEl = document.querySelector('svg');
+  const ns = 'http://www.w3.org/2000/svg';
+
+  // Add glow filter
+  let defs = svgEl.querySelector('defs');
+  if (!defs) { defs = document.createElementNS(ns, 'defs'); svgEl.insertBefore(defs, svgEl.firstChild); }
+  const ballFilter = document.createElementNS(ns, 'filter');
+  ballFilter.setAttribute('id', 'ball-glow');
+  ballFilter.setAttribute('x', '-300%'); ballFilter.setAttribute('y', '-300%');
+  ballFilter.setAttribute('width', '700%'); ballFilter.setAttribute('height', '700%');
+  ballFilter.innerHTML = `
+    <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  `;
+  defs.appendChild(ballFilter);
+
+  const balls = [];
+
+  // Find edges and create balls — select by data-id directly
+  svgEl.querySelectorAll('path[data-id]').forEach(path => {
+    const dataId = path.getAttribute('data-id');
+    if (!dataId || !edgeColors[dataId]) return;
+    const color = edgeColors[dataId];
+
+    const totalLen = path.getTotalLength();
+    if (!totalLen) return;
+
+    const duration = Math.max(2000, Math.min(5000, totalLen * 4)); // ms
+
+    // Create glowing circle
+    const circle = document.createElementNS(ns, 'circle');
+    circle.setAttribute('r', '6');
+    circle.setAttribute('fill', color);
+    circle.setAttribute('filter', 'url(#ball-glow)');
+
+    // Place it in the root <g> so it renders on top
+    const rootG = svgEl.querySelector('g.root');
+    if (rootG) rootG.appendChild(circle);
+
+    // Stagger start so balls don't all start at same position
+    const offset = Math.random();
+
+    balls.push({ circle, path, totalLen, duration, offset });
+  });
+
+  // Animate with requestAnimationFrame
+  let startTime = null;
+  function animate(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const elapsed = timestamp - startTime;
+
+    balls.forEach(b => {
+      const progress = ((elapsed / b.duration) + b.offset) % 1;
+      const point = b.path.getPointAtLength(progress * b.totalLen);
+      b.circle.setAttribute('cx', point.x);
+      b.circle.setAttribute('cy', point.y);
+    });
+
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+}
+init();
+</script>
+</body>
+</html>
