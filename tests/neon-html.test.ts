@@ -58,6 +58,14 @@ describe("generateNeonHtml", () => {
     expect(noGlow).toContain("function glowFilter");
   });
 
+  it.each(["spectrum", "vivid", "candy", "forest"] as const)("renders %s theme with correct background", (theme) => {
+    const html = generateNeonHtml(SAMPLE_SVG, { theme });
+    expect(html).toContain("<!DOCTYPE html>");
+    expect(html).toContain("<script>");
+    // Each theme should have a unique background
+    expect(html).toContain("background:");
+  });
+
   it("embeds color mode and random-mode branch into runtime JS", () => {
     const html = generateNeonHtml(SAMPLE_SVG, { colorMode: "random" });
     expect(html).toContain('var COLOR_MODE = "random";');

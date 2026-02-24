@@ -100,7 +100,7 @@ const VALID_LAYOUTS = new Set<LayoutPreset>([
   "tree",
 ]);
 const VALID_BALL_SIZES = new Set<NeonBallSize>(["small", "medium", "large"]);
-const VALID_THEMES = new Set<NeonTheme>(["neon", "pastel", "ocean", "sunset"]);
+const VALID_THEMES = new Set<NeonTheme>(["neon", "pastel", "ocean", "sunset", "spectrum", "vivid", "candy", "forest"]);
 const VALID_COLOR_MODES = new Set<NeonColorMode>(["cluster", "random"]);
 
 function parseDirection(value: string): MermaidDirection {
@@ -130,7 +130,7 @@ function parseBallSize(value: string): NeonBallSize {
 function parseTheme(value: string): NeonTheme {
   const normalized = value.trim().toLowerCase() as NeonTheme;
   if (!VALID_THEMES.has(normalized)) {
-    throw new InvalidArgumentError("Theme must be one of: neon, pastel, ocean, sunset.");
+    throw new InvalidArgumentError("Theme must be one of: neon, pastel, ocean, sunset, spectrum, vivid, candy, forest.");
   }
   return normalized;
 }
@@ -323,7 +323,7 @@ program
   )
   .option(
     "--theme <theme>",
-    "HTML theme: neon, pastel, ocean, sunset",
+    "HTML theme: neon, pastel, ocean, sunset, spectrum, vivid, candy, forest",
     parseTheme,
     "neon",
   )

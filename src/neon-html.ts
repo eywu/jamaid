@@ -34,7 +34,7 @@ type BallSizeConfig = {
 };
 
 export type NeonBallSize = "small" | "medium" | "large";
-export type NeonTheme = "neon" | "pastel" | "ocean" | "sunset";
+export type NeonTheme = "neon" | "pastel" | "ocean" | "sunset" | "spectrum" | "vivid" | "candy" | "forest";
 export type NeonColorMode = "cluster" | "random";
 
 const NEON_PALETTE: PaletteColor[] = [
@@ -79,6 +79,50 @@ const SUNSET_PALETTE: PaletteColor[] = [
   { name: "salmon", hex: "#e98973", rgb: "233,137,115" },
   { name: "tangerine", hex: "#f08a24", rgb: "240,138,36" },
   { name: "terracotta", hex: "#c96a4a", rgb: "201,106,74" },
+];
+
+const SPECTRUM_PALETTE: PaletteColor[] = [
+  { name: "red", hex: "#ff3333", rgb: "255,51,51" },
+  { name: "orange", hex: "#ff8800", rgb: "255,136,0" },
+  { name: "yellow", hex: "#ffdd00", rgb: "255,221,0" },
+  { name: "green", hex: "#33cc33", rgb: "51,204,51" },
+  { name: "cyan", hex: "#00ccdd", rgb: "0,204,221" },
+  { name: "blue", hex: "#3366ff", rgb: "51,102,255" },
+  { name: "purple", hex: "#9933ff", rgb: "153,51,255" },
+  { name: "magenta", hex: "#ff33aa", rgb: "255,51,170" },
+];
+
+const VIVID_PALETTE: PaletteColor[] = [
+  { name: "magenta", hex: "#ff2288", rgb: "255,34,136" },
+  { name: "green", hex: "#22dd44", rgb: "34,221,68" },
+  { name: "orange", hex: "#ff8811", rgb: "255,136,17" },
+  { name: "blue", hex: "#2266ff", rgb: "34,102,255" },
+  { name: "yellow", hex: "#ffcc00", rgb: "255,204,0" },
+  { name: "purple", hex: "#9922ff", rgb: "153,34,255" },
+  { name: "cyan", hex: "#00ddcc", rgb: "0,221,204" },
+  { name: "red", hex: "#ff2222", rgb: "255,34,34" },
+];
+
+const CANDY_PALETTE: PaletteColor[] = [
+  { name: "hot pink", hex: "#ff1493", rgb: "255,20,147" },
+  { name: "electric teal", hex: "#00e5cc", rgb: "0,229,204" },
+  { name: "bright purple", hex: "#bb33ff", rgb: "187,51,255" },
+  { name: "neon yellow", hex: "#eeff00", rgb: "238,255,0" },
+  { name: "fuchsia", hex: "#ff44ff", rgb: "255,68,255" },
+  { name: "aqua blue", hex: "#00aaff", rgb: "0,170,255" },
+  { name: "lime punch", hex: "#aaff00", rgb: "170,255,0" },
+  { name: "tangerine", hex: "#ff6622", rgb: "255,102,34" },
+];
+
+const FOREST_PALETTE: PaletteColor[] = [
+  { name: "emerald", hex: "#2ecc71", rgb: "46,204,113" },
+  { name: "moss", hex: "#7fb069", rgb: "127,176,105" },
+  { name: "bark", hex: "#a0855b", rgb: "160,133,91" },
+  { name: "fern", hex: "#55a868", rgb: "85,168,104" },
+  { name: "amber sap", hex: "#d4a44c", rgb: "212,164,76" },
+  { name: "lichen", hex: "#88b89a", rgb: "136,184,154" },
+  { name: "copper", hex: "#b87333", rgb: "184,115,51" },
+  { name: "sage", hex: "#6b8f5e", rgb: "107,143,94" },
 ];
 
 const THEME_CONFIGS: Record<NeonTheme, ThemeConfig> = {
@@ -133,6 +177,58 @@ const THEME_CONFIGS: Record<NeonTheme, ThemeConfig> = {
     glowScale: 0.52,
     textGlowScale: 0.45,
     ballOpacity: 0.78,
+  },
+  spectrum: {
+    palette: SPECTRUM_PALETTE,
+    background: "radial-gradient(ellipse at center, #111118 0%, #0a0a10 60%, #050508 100%)",
+    nodeFill: "rgba(12, 12, 20, 0.92)",
+    nodeTextColor: "#e8e8e8",
+    edgeLabelTextColor: "rgba(200, 200, 220, 0.9)",
+    edgeLabelRectFill: "rgba(12, 12, 20, 0.9)",
+    edgeLabelRectStroke: "rgba(120, 120, 160, 0.35)",
+    clusterLabelColor: "#dddde8",
+    glowScale: 0.9,
+    textGlowScale: 0.9,
+    ballOpacity: 0.92,
+  },
+  vivid: {
+    palette: VIVID_PALETTE,
+    background: "radial-gradient(ellipse at center, #0e0e1c 0%, #08081a 60%, #040410 100%)",
+    nodeFill: "rgba(10, 10, 22, 0.92)",
+    nodeTextColor: "#ebebeb",
+    edgeLabelTextColor: "rgba(200, 200, 230, 0.92)",
+    edgeLabelRectFill: "rgba(10, 10, 22, 0.9)",
+    edgeLabelRectStroke: "rgba(110, 110, 170, 0.35)",
+    clusterLabelColor: "#e0e0f0",
+    glowScale: 0.95,
+    textGlowScale: 0.95,
+    ballOpacity: 0.93,
+  },
+  candy: {
+    palette: CANDY_PALETTE,
+    background: "radial-gradient(ellipse at center, #1a0a22 0%, #120818 60%, #0a0410 100%)",
+    nodeFill: "rgba(18, 8, 28, 0.9)",
+    nodeTextColor: "#f0e8ff",
+    edgeLabelTextColor: "rgba(220, 200, 245, 0.92)",
+    edgeLabelRectFill: "rgba(18, 8, 28, 0.9)",
+    edgeLabelRectStroke: "rgba(180, 120, 220, 0.4)",
+    clusterLabelColor: "#f0e0ff",
+    glowScale: 1,
+    textGlowScale: 1,
+    ballOpacity: 0.95,
+  },
+  forest: {
+    palette: FOREST_PALETTE,
+    background: "radial-gradient(ellipse at center, #0f1a12 0%, #0a120c 60%, #060d08 100%)",
+    nodeFill: "rgba(10, 18, 12, 0.9)",
+    nodeTextColor: "#dde8dd",
+    edgeLabelTextColor: "rgba(180, 200, 180, 0.9)",
+    edgeLabelRectFill: "rgba(10, 18, 12, 0.9)",
+    edgeLabelRectStroke: "rgba(100, 140, 100, 0.4)",
+    clusterLabelColor: "#c8dcc8",
+    glowScale: 0.7,
+    textGlowScale: 0.65,
+    ballOpacity: 0.85,
   },
 };
 
