@@ -22,6 +22,8 @@ Convert FigJam flow diagrams into Mermaid 🧜‍♀️ flowcharts/markdown.
 ## Install
 
 ```bash
+git clone git@github.com:eywu/jamaid.git
+cd jamaid
 npm install
 ```
 
