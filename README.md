@@ -79,6 +79,9 @@ Options:
   --png                    Output as PNG image (.png, requires mmdc)
   --svg                    Output as SVG image (.svg, requires mmdc)
   --html                   Output as animated neon-themed HTML (.html, requires mmdc)
+  --ball-size <size>        HTML ball size: small, medium, large (default: medium)
+  --theme <theme>           HTML theme: neon, pastel, ocean, sunset (default: neon)
+  --color-mode <mode>       HTML color mode: cluster, random (default: cluster)
   -h, --help               Display help
 ```
 
@@ -121,6 +124,55 @@ jamaid ABC123 --html --page "Architecture"
 
 # Custom output path
 jamaid ABC123 --html --page 1 -o my-diagram.html
+```
+
+#### Ball Size (`--ball-size`)
+
+Control the size of the traveling glow balls on connectors.
+
+| Value    | Radius | Glow blur |
+| -------- | ------ | --------- |
+| `small`  | 3px    | 3px       |
+| `medium` | 5px    | 5px       |
+| `large`  | 6px    | 6px       |
+
+```bash
+jamaid ABC123 --html --ball-size small
+jamaid ABC123 --html --ball-size large
+```
+
+#### Themes (`--theme`)
+
+Choose from four color themes that control background, node fills, text colors, glow intensity, and the color palette.
+
+| Theme    | Background | Palette                              |
+| -------- | ---------- | ------------------------------------ |
+| `neon`   | Dark cyberpunk | Vivid greens, blues, ambers, cyans   |
+| `pastel` | Dark muted     | Soft pinks, lavenders, mints, peaches |
+| `ocean`  | Light blue     | Deep blues, teals, aquas, seafoams    |
+| `sunset` | Light warm     | Ambers, corals, roses, golds          |
+
+Light themes (`ocean`, `sunset`) automatically reduce glow intensity and ball opacity for readability on light backgrounds.
+
+```bash
+jamaid ABC123 --html --theme pastel
+jamaid ABC123 --html --theme ocean
+jamaid ABC123 --html --theme sunset
+```
+
+#### Color Mode (`--color-mode`)
+
+Control how colors are assigned to individual nodes.
+
+- **`cluster`** (default) — All nodes in the same subgraph share one color. Matches the subgraph border color.
+- **`random`** — Each node gets a distinct color from the theme palette via deterministic hashing. Subgraph borders still keep their own cluster color.
+
+```bash
+# Every node gets its own color
+jamaid ABC123 --html --color-mode random
+
+# Combine with a theme
+jamaid ABC123 --html --theme sunset --color-mode random --ball-size small
 ```
 
 ### Source Modes
