@@ -2,32 +2,33 @@
 
 import { InvalidArgumentError, Command } from "commander";
 import dotenv from "dotenv";
-import { readFile, unlink, writeFile } from "node:fs/promises";
-import { homedir, tmpdir } from "node:os";
-import { join } from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { readFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { basename, extname, join } from "node:path";
 import {
   isJsonInputSource,
   parseInputFormat,
   parseSourceMode,
   resolveCliIngestOptions,
 } from "./cli-options.js";
-import type {
-  GenerateNeonHtmlOptions,
-  NeonBallSize,
-  NeonColorMode,
-  NeonTheme,
-} from "./neon-html.js";
+import { layoutToMermaidConfig, type LayoutPreset } from "./layout.js";
+import {
+  detectDirectMermaidInput,
+  readDirectMermaidInput,
+} from "./mermaid-input.js";
+import type { NeonBallSize, NeonColorMode, NeonTheme } from "./neon-html.js";
+import {
+  extensionFor,
+  sanitizeFilename,
+  writeDiagramOutput,
+  type HtmlRenderOptions,
+} from "./output.js";
 import { runDiagramPipeline, type RenderedPageDiagram } from "./pipeline.js";
-import type { LayoutPreset } from "./layout.js";
 import type {
   DiagramInputFormat,
   DiagramSourceMode,
   MermaidDirection,
 } from "./types.js";
-
-const execFileAsync = promisify(execFile);
 
 type CliOptions = {
   output?: string;
@@ -46,49 +47,6 @@ type CliOptions = {
   colorMode?: NeonColorMode;
   glow?: boolean;
 };
-
-function sanitizeFilename(name: string): string {
-  return name.replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").toLowerCase() || "output";
-}
-
-function createTempBasePath(): string {
-  return join(tmpdir(), `jamaid-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
-}
-
-async function renderWithMmdc(
-  mermaid: string,
-  outPath: string,
-  format: "png" | "svg",
-  mermaidConfig: Record<string, unknown> | null = null,
-) {
-  const tempBasePath = createTempBasePath();
-  const tmpMmd = `${tempBasePath}.mmd`;
-  const tmpConfig = mermaidConfig ? `${tempBasePath}.config.json` : null;
-  await writeFile(tmpMmd, `${mermaid}\n`, "utf8");
-  if (tmpConfig) {
-    await writeFile(tmpConfig, `${JSON.stringify(mermaidConfig)}\n`, "utf8");
-  }
-
-  const args = ["-i", tmpMmd, "-o", outPath, "-e", format, "-b", "transparent"];
-  if (tmpConfig) {
-    args.push("-c", tmpConfig);
-  }
-
-  try {
-    await execFileAsync("mmdc", args);
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("ENOENT")) {
-      throw new Error("mmdc (mermaid-cli) not found. Install it with: npm i -g @mermaid-js/mermaid-cli");
-    }
-    throw new Error(`${format.toUpperCase()} rendering failed: ${msg}`);
-  } finally {
-    await unlink(tmpMmd).catch(() => {});
-    if (tmpConfig) {
-      await unlink(tmpConfig).catch(() => {});
-    }
-  }
-}
 
 const VALID_DIRECTIONS = new Set<MermaidDirection>(["TD", "LR", "TB", "BT", "RL"]);
 const VALID_LAYOUTS = new Set<LayoutPreset>([
@@ -198,93 +156,15 @@ function selectPages<T extends { pageName: string }>(pages: T[], requested?: str
   return [byName];
 }
 
-function extensionFor(options: CliOptions): string {
-  if (options.markdown) return ".md";
-  if (options.png) return ".png";
-  if (options.svg) return ".svg";
-  if (options.html) return ".html";
-  return ".mmd";
-}
-
-function defaultContent(mermaid: string, options: CliOptions): string {
-  if (options.markdown) {
-    return `\`\`\`mermaid\n${mermaid}\n\`\`\`\n`;
-  }
-  return `${mermaid}\n`;
-}
-
-async function renderSvgString(
-  mermaid: string,
-  mermaidConfig: Record<string, unknown> | null = null,
-): Promise<string> {
-  const tempBasePath = createTempBasePath();
-  const tmpMmd = `${tempBasePath}.mmd`;
-  const tmpSvg = `${tempBasePath}.svg`;
-  const tmpConfig = mermaidConfig ? `${tempBasePath}.config.json` : null;
-  await writeFile(tmpMmd, `${mermaid}\n`, "utf8");
-  if (tmpConfig) {
-    await writeFile(tmpConfig, `${JSON.stringify(mermaidConfig)}\n`, "utf8");
-  }
-
-  const args = ["-i", tmpMmd, "-o", tmpSvg, "-e", "svg", "-t", "dark", "-b", "transparent"];
-  if (tmpConfig) {
-    args.push("-c", tmpConfig);
-  }
-
-  try {
-    await execFileAsync("mmdc", args);
-    return await readFile(tmpSvg, "utf8");
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("ENOENT")) {
-      throw new Error("mmdc (mermaid-cli) not found. Install it with: npm i -g @mermaid-js/mermaid-cli");
-    }
-    throw new Error(`SVG rendering failed: ${msg}`);
-  } finally {
-    await unlink(tmpMmd).catch(() => {});
-    await unlink(tmpSvg).catch(() => {});
-    if (tmpConfig) {
-      await unlink(tmpConfig).catch(() => {});
-    }
-  }
-}
-
-async function writeDiagramOutput(
-  mermaid: string,
-  outPath: string,
-  options: CliOptions,
-  mermaidConfig: Record<string, unknown> | null,
-  pageTitle?: string,
-  htmlOptions: Pick<GenerateNeonHtmlOptions, "ballSize" | "theme" | "colorMode"> = {},
-) {
-  if (options.png) {
-    await renderWithMmdc(mermaid, outPath, "png", mermaidConfig);
-    return;
-  }
-  if (options.svg) {
-    await renderWithMmdc(mermaid, outPath, "svg", mermaidConfig);
-    return;
-  }
-  if (options.html) {
-    const { generateNeonHtml } = await import("./neon-html.js");
-    const svgString = await renderSvgString(mermaid, mermaidConfig);
-    await writeFile(
-      outPath,
-      generateNeonHtml(svgString, { title: pageTitle, ...htmlOptions }),
-      "utf8",
-    );
-    return;
-  }
-
-  await writeFile(outPath, defaultContent(mermaid, options), "utf8");
-}
-
 const program = new Command();
 
 program
   .name("jamaid")
   .description("Convert FigJam flow diagrams into Mermaid markdown")
-  .argument("[input]", "FigJam URL/file key or JSON file path (depends on --source)")
+  .argument(
+    "[input]",
+    "FigJam URL/file key, Mermaid file (.mmd/.mermaid), or JSON file path (depends on --source)",
+  )
   .option("-o, --output <path>", "Write Mermaid output to file")
   .option("--token <token>", "Figma API token (overrides FIGMA_API_TOKEN)")
   .option(
@@ -334,13 +214,60 @@ program
     "cluster",
   )
   .option("--no-glow", "Disable halo glow effects in HTML output")
-  .action(async (input: string | undefined, options: CliOptions) => {
+  .action(async (input: string | undefined, options: CliOptions, command: Command) => {
     const formatFlags = [options.markdown, options.png, options.svg, options.html].filter(Boolean).length;
     if (formatFlags > 1) {
       throw new Error("Use only one output format flag at a time: --markdown, --png, --svg, or --html.");
     }
 
     const source = options.source ?? "rest";
+    const sourceValue = command.getOptionValueSource("source");
+    const sourceWasExplicit = sourceValue !== "default";
+    const htmlOptions: HtmlRenderOptions = {
+      ballSize: options.ballSize,
+      theme: options.theme,
+      colorMode: options.colorMode,
+      glow: options.glow !== false,
+    };
+    const directMermaidInput = await detectDirectMermaidInput({
+      input,
+      source,
+      sourceWasExplicit,
+      stdinIsTty: Boolean(process.stdin.isTTY),
+    });
+
+    if (directMermaidInput) {
+      const mermaid = await readDirectMermaidInput(directMermaidInput);
+      if (!mermaid.trim()) {
+        throw new Error("Mermaid input is empty.");
+      }
+
+      if (!options.output && !options.markdown && !options.png && !options.svg && !options.html) {
+        process.stdout.write(mermaid.endsWith("\n") ? mermaid : `${mermaid}\n`);
+        return;
+      }
+
+      const fileBaseName = directMermaidInput.kind === "file"
+        ? sanitizeFilename(basename(directMermaidInput.path, extname(directMermaidInput.path)))
+        : "stdin";
+      const outPath = options.output ?? `${fileBaseName}${extensionFor(options)}`;
+      const mermaidConfig = layoutToMermaidConfig(options.layout ?? "auto");
+      const pageTitle = directMermaidInput.kind === "file"
+        ? basename(directMermaidInput.path)
+        : "stdin";
+
+      await writeDiagramOutput(
+        mermaid,
+        outPath,
+        options,
+        mermaidConfig,
+        pageTitle,
+        htmlOptions,
+      );
+      process.stderr.write(`Written to ${outPath}\n`);
+      return;
+    }
+
     const ingestOptions = resolveCliIngestOptions(source, input);
     const token = ingestOptions.requiresToken ? await resolveToken(options.token) : "";
     const format = options.format ?? "auto";
@@ -363,12 +290,6 @@ program
     }
 
     const fileBaseName = sanitizeFilename(pipeline.fileName ?? pipeline.fileKey);
-    const htmlOptions: Pick<GenerateNeonHtmlOptions, "ballSize" | "theme" | "colorMode" | "glow"> = {
-      ballSize: options.ballSize,
-      theme: options.theme,
-      colorMode: options.colorMode,
-      glow: options.glow !== false,
-    };
 
     if (pages.length === 1) {
       const [page] = pages;
